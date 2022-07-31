@@ -1,0 +1,262 @@
+--[[
+Region Areas and City
+	erstelle Regionen in deiner Minetestwelt
+	wilderness - alles was keiner REgion zugewiesen ist
+	city: in der City kann man Bauplätze (hier plot genannt) markieren 
+	plot: diese Bauplätze können an Spieler vergeben werden.
+	Für jede Region kann man das Verhalten einstellen und außerdem hat sie einen
+		- Besitzer - owner, dieser kann die Attribute des Gebietes ändern
+		- Namen unter dem sie im Spieler Hud angezeigt wird.
+	Jedes Gebiet besitze Attribute, die es beeinflussen.  
+		- Aneignen - claimable: kann sich das Gebiet jemand holen 
+		- Art des Gebietes - zone: allowed_zones = { "none", "city", "plot", "owned"  }
+		- Schutz - protected: nur der Besitzen (owner) kann hier interagieren
+		- Gäste -guests: jeder Besitzer kann andere Spieler einladen in seinem Gebiet zu interagieren
+		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg PvP abhängig
+		- Monster machen Schaden - mvp: der Monsterschaden kann auf dem Gebiet verboten werden
+		- Effect: jedes Gebiet kann einen Effekt haben. allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"}
+	 			hot: heal over time 
+				bot: breath over time
+  			holy: heal und bot
+	 			dot: damage over time
+	 			choke: reduce breath over time
+	 			evil: dot und choke	
+	
+	
+
+Copyright (c) 2022
+	ralf Weinert <downad@freenet.de>
+Source Code: 	
+	https://github.com/downad/rac
+License: 
+	GPLv3
+]]--
+
+
+-- namespace rac = region, areas and zones
+rac = {
+
+	-- Paths and infos to the mod
+	worlddir = minetest.get_worldpath(),
+	modname = minetest.get_current_modname(),
+	modpath = minetest.get_modpath(minetest.get_current_modname()),
+	
+	-- diese Attribute gelten für die freien Gebiete, die Wildnis
+	wilderness = {
+		owner = "King Arthur",  -- default: "king arthur". Dieser Name wird angezeigt, mögliches Problem: ein Spieler heißt so!!!!!
+		name = "Wildnis",				-- default: "wilderness". Diese Anzeige erscheint im Hud	
+		claimable = true,				-- default: true. Ein Spieler mit dem passenden Recht kann sich eine Region aneignen 	
+		zone = "none",					-- default: "none". Das Gebiet ist keiner Zone zugewiesen
+		protected = false,			-- default: false. Das Gebiet is nicht geschützt. true würde einen weltweiter Schutz bedeuten (oder das Schutzleve des Gebietes) 
+		guests = "",						-- default: "". Es gibt keine Gäste
+		pvp = false,							-- default: false. Kein PvP erlaubt
+		mvp = true,							-- default: true. Monster machen schaden
+		effect = "none",				-- default: "none", In der Wildnis gibt es keine besonderen Effekte 
+		text_wilderness = "Du bist in der Wildnis!", 
+		text_pvp ="Vorsicht PvP ist erlaubt!",
+		text_protected ="(geschützt) ",
+		text_owner ="gehört",  -- daraus wird ein String: name .. "gehört" .. owner
+	},
+	-- diese Attribute gelten für ein frisch angelegtes Gebiet	
+	region_attribute = {
+		-- in Version 1.0 sind diese Attribute erlaubt
+		allowed_region_attribute= {"owner","region_name","claimable","zone","plot","protected","guests","pvp","mvp","effect","check_player" },
+		--	owner								as string, this MUST be!
+		--	region_name					as string, this MUST be!
+		--	claimable						as boolean
+		--	zone								as string, allowed_zones = { "none", "city", "plot", "owned"  },
+		--	protected						as boolean
+		--	guests							as string, comma separated Player_names
+		--	pvp									as boolean
+		--	mvp									as boolean
+		--		effect							as string, allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"},
+		--   version							as string
+		claimable = true, -- yes a player can claim this area
+		zone = "none",  
+		allowed_zones = { "none", "city", "plot", "owned"  },
+		protected = false,
+		guests = "-",		--empty list finals with ','
+		pvp = false,
+		mvp = true,
+		effect = "none",
+		allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"},
+		version = "1.0",
+	},
+	serveradmin_is_regionadmin = false,
+
+	
+	
+	-- if 'digging in an protected region damage the player
+	do_damage_for_violation = true,			-- default: true
+	-- the damage a player get for 'digging' in a protected region
+	damage_on_protection_violation = 4, -- default: 4. Der Spieler bekommt 4 Schaden wenn er in einem Geschützten Gebiet etwas abbaut.
+
+	-- for debugging
+	debug = true, 
+	show_func_version = true,
+	debug_level = 1, -- 1 - 10 von wenig bis alles
+	-- debug_level >8 um den bei show_func_version = true was zu sehen
+	
+	
+	-- der AreaStore() wird initialisiert
+	rac_store = AreaStore(),
+
+	-- some minimum values for the regions
+	minimum_width = 2,			-- the smalest region for player is a square of 3 x 3
+	minimum_height = 4,			-- the minimum high is 4 
+	maximum_width = 100,		-- for player
+	maximum_height = 60,			-- for player
+	landrush_width = 16,			-- if a landrush module will be created
+	landrush_height = 16,			-- if a landrush module will be created
+
+	-- some values for the region effects
+	region_effect = {
+		-- the interval of dealing effects
+		time = 1,
+		-- life gaining 1 HP per effect_time seconds 	
+		hot = 1,
+		-- food gaining 1 per effect_time seconds 	
+		--effect_fot = 1,
+		-- breath gaining 1 per effect_time seconds 	
+		bot = 1,
+		-- loosing life 1 HP per effect_time seconds 	
+		dot = 1,
+		-- loosing food 1  per effect_time seconds 	
+		--effect_starve = 1,
+		-- loosing breath 5 per effect_time seconds 	
+		choke = 5,
+	},
+
+	-- the filename for AreaStore
+	store_file_name = "rac_store.dat",
+	export_file_name ="rac_export.dat",
+	backup_file_name ="rac_backup_",
+	
+	-- init saved huds 
+	player_huds = {},
+	-- some color for the hud
+	color = {
+		red = "0xFF0000",
+		orange = "0xFF8C00",
+		purple = "0x800080", 
+		yellow = "0xFFFF00",
+		blue = "0x0000FF",
+ 		white = "0xFFFFFF",
+		magenta = "0xFF00FF",
+		crimson = "0xDC143C",
+	},
+
+	-- some more defaults
+	-- Speicherort für die Steuerung
+	player_guide = {},
+	
+	-- global PvP in minetest.conf
+	enable_pvp = minetest.settings:get_bool("enable_pvp"),
+
+	-- init command_players for chatcommands
+	command_players = {},
+	marker1 = {},		-- for placing edges-boxes 
+	marker2 = {},		-- for placing edges-boxes 
+	set_command = {},	-- for punchnode function
+	
+--	error_msg_text = {},
+}
+
+-----------------------------------
+-- load some .luas
+-----------------------------------
+--
+-- the functions for this mod
+dofile(rac.modpath.."/rac_lib.lua")			-- errorhandling: done
+dofile(rac.modpath.."/error_msg_text.lua")			-- Tabelle mit Error/msg Nummer
+--dofile(rac.modpath.."/command_func.lua")	-- errorhandling: done
+
+-- load converter for ShadowNinja areas
+--dofile(rac.modpath.."/convert.lua")			-- errorhandling: done
+
+-- init globalstep for the hud
+dofile(rac.modpath.."/globalstep.lua") 		-- errorhandling: done
+
+-- do effects 
+--dofile(rac.modpath.."/effect_func.lua")		-- errorhandling: done
+
+-- create an hud
+dofile(rac.modpath.."/hud.lua")				-- errorhandling: done
+
+-- modify mintest-functions
+dofile(rac.modpath.."/minetest_func.lua")	-- errorhandling: done
+
+-- set priviles and commands
+dofile(rac.modpath.."/privilegs.lua")	-- errorhandling: done	
+
+-- set landrush items
+--dofile(rac.modpath.."/items.lua")
+
+-- set region RAC-Guide
+dofile(rac.modpath.."/rac_guide.lua")		
+
+-- if you want do set some default regions, 
+-- use debug.lua 
+-- dofile(rac.modpath.."/debug.lua")
+
+
+-- load regions from file
+-- fill AreaStore()
+--local err = rac:load_regions_from_file()
+--rac:msg_handling(err)
+
+-- check if region must be converted
+--err = rac:convert_region_to_version()
+--rac:msg_handling(err)
+
+-- für das RAC-Guide Module! 
+	if default == nil then
+		minetest.log("error", "[" .. rac.modname .. "] minetest.register_node(\"rac:stone_with_guidebook\" - sounds= default.node_sound_wood_defaults() => kein default!!!!")
+	else
+		minetest.log("error", "[" .. rac.modname .. "] minetest.register_node(\"rac:stone_with_guidebook\" - sounds= default.node_sound_wood_defaults() gefunden!!!!")
+	end
+	
+-- zu Testzwecken
+--return {["y"] = -8, ["x"] = -555, ["z"] = -366}
+--return {["y"] = 21, ["x"] = -517, ["z"] = -320}
+--return {["protected"] = true, ["city"] = false, ["guests"] = "adownad,Cori", ["owner"] = "Downad", ["plot"] = false, ["region_name"] = "DunDownad", ["PvP"] = false, ["effect"] = "none", ["MvP"] = false}
+local pos1 = minetest.deserialize("return {[\"y\"] = -8, [\"x\"] = -555, [\"z\"] = -366}")
+local pos2 = minetest.deserialize("return {[\"y\"] = 21, [\"x\"] = -517, [\"z\"] = -320}")
+--local data = minetest.deserialize("return {[\"protected\"] = true, [\"city\"] = false, [\"guests\"] = \"adownad,Cori\", [\"owner\"] = \"Downad\", [\"plot\"] = false, [\"region_name\"] = \"DunDownad\", [\"PvP\"] = false, [\"effect\"] = \"none\", [\"MvP\"] = false}")
+local data = "return {[\"protected\"] = true, [\"city\"] = false, [\"guests\"] = \"adownad,Cori\", [\"owner\"] = \"Downad\", [\"plot\"] = false, [\"region_name\"] = \"DunDownad\", [\"PvP\"] = false, [\"effect\"] = \"none\", [\"MvP\"] = false}"
+minetest.log("action", "[" .. rac.modname .. "] data = "..tostring(data))
+local err
+-- aufruf mit den Parameter siehe eintrag
+-- function rac:create_data_string(owner   ,region_name,claimable,zone	 ,protected,guests_string,pvp  ,mvp  ,effect,check_player)
+err, data = rac:create_data_string("Downad","DunDownad",true		 ,"owned",true     ,"-"          ,false,false,"none",true)
+minetest.log("action", "[" .. rac.modname .. "] nach rac:create_data_string - err = "..err)
+if err >  0 then
+	rac:msg_handling(err)
+else
+	minetest.log("action", "[" .. rac.modname .. "] nach rac:create_data_string - data = "..data)
+end
+-- ein TESTgebiet wird angelegt
+minetest.log("action", "[" .. rac.modname .. "] -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +")
+minetest.log("action", "[" .. rac.modname .. "] lege das Testgebiet an")
+err,id = rac:set_region(pos1,pos2,data)
+if err >  0 then
+	rac:msg_handling(err)
+else
+	minetest.log("action", "[" .. rac.modname .. "] nach rac:create_data_string - region_id = "..tostring(id))
+end
+minetest.log("action", "[" .. rac.modname .. "] -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +")
+
+
+-- all done then ....
+minetest.log("action", "[" .. rac.modname .. "] version "..rac.region_attribute.version.." successfully loaded")
+
+
+
+
+
+
+
+
+
+
+
