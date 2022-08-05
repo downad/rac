@@ -1,0 +1,32 @@
+skelett function
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- <<<<<<<< NAME >>>>>>>>
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- Beschreibungstext
+--
+--
+-- input:
+-- 		pos1, pos2 		as vector
+-- 		data 			as (designed) string 
+--	  	use: raz:create_data(owner,region_name,protected,guests_string,PvP,MvP,effect,plot,city,do_not_check_player)
+-- 			because in the datafield could only stored a string	
+--
+-- return:
+--	err / nothing
+--  id of new region
+--
+-- msg/error handling: YES / no
+-- 	err,id
+function ()
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 0 then
+
+		
+		
+		
+		
+		
+		

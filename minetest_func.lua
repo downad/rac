@@ -1,8 +1,30 @@
 --[[
 Region Areas and City
 	erstelle Regionen in deiner Minetestwelt
+	wilderness - alles was keiner Region zugewiesen ist
+	city: in der City kann man Bauplätze (hier plot genannt) markieren 
+	plot: diese Bauplätze können an Spieler vergeben werden.
+	Für jede Region kann man das Verhalten einstellen und außerdem hat sie einen
+		- Besitzer - owner, dieser kann die Attribute des Gebietes ändern
+		- Namen unter dem sie im Spieler Hud angezeigt wird.
+	Jedes Gebiet besitze Attribute, die es beeinflussen.  
+		- Aneignen - claimable: kann sich das Gebiet jemand holen 
+		- Art des Gebietes - zone: allowed_zones = { "none", "city", "plot", "owned"  }
+		- Schutz - protected: nur der Besitzen (owner) kann hier interagieren
+		- Gäste -guests: jeder Besitzer kann andere Spieler einladen in seinem Gebiet zu interagieren
+		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg PvP abhängig
+		- Monster machen Schaden - mvp: der Monsterschaden kann auf dem Gebiet verboten werden
+		- Effect: jedes Gebiet kann einen Effekt haben. allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"}
+	 			hot: heal over time 
+				bot: breath over time
+  			holy: heal und bot
+	 			dot: damage over time
+	 			choke: reduce breath over time
+	 			evil: dot und choke	
 	
-Copyright (c) 2013
+	
+
+Copyright (c) 2022
 	ralf Weinert <downad@freenet.de>
 Source Code: 	
 	https://github.com/downad/rac
@@ -93,7 +115,7 @@ end
 --
 -- msg/errorhandling: no
 function rac:can_interact(pos, name)
-	local func_version = "1.0.0"
+	local func_version = "1.0.1" -- angepasstes get_region_at_pos err == nil für keine ID bei Position pos gefunden
 	if rac.show_func_version and rac.debug_level == 10 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - Version: "..tostring(func_version)	)
 	end
@@ -122,10 +144,16 @@ function rac:can_interact(pos, name)
 
 	-- hole eine eine Tabelle mit allen region ID
 	-- ist der wert nil dann gibt es keine ID
-	local err,region_id = rac:get_region_at_pos(pos)
-	if err > 0 then
+	local err
+	local region_id 
+	err,region_id = rac:get_region_at_pos(pos)
+	-- keine Region gefunden
+	if err == nil then
+		err = 0 -- Alles ist gut, Globlastep geht auf region_id == nil
+	elseif err >  0 then
 		rac:msg_handling(err)
-	end
+	end	
+
 		
 	if region_id == nil then
 		-- es gibt keine Region, nutze den wilderness Werte protected
@@ -138,11 +166,12 @@ function rac:can_interact(pos, name)
 		end
 	elseif #region_id == 1 then
 		-- einfacher Fall es gibt nur eine Region
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1 then: "..tostring(rac:table_to_string(region_id))	)
-		err,data_table = rac:get_region_datatable(regions_id[1])
-		if err > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1: region_id = "..tostring(rac:table_to_string(region_id))	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1: region_id[1] = "..tostring(region_id[1])	)
+		err,data_table = rac:get_region_datatable(region_id[1])
+		if err >  0 then
 			rac:msg_handling(err)
-		end
+		end	
 		owner = data_table.owner
 		guests = data_table.guests --<- this is a string!
 		is_protected = data_table.protected	

@@ -1,8 +1,30 @@
 --[[
 Region Areas and City
 	erstelle Regionen in deiner Minetestwelt
+	wilderness - alles was keiner Region zugewiesen ist
+	city: in der City kann man Bauplätze (hier plot genannt) markieren 
+	plot: diese Bauplätze können an Spieler vergeben werden.
+	Für jede Region kann man das Verhalten einstellen und außerdem hat sie einen
+		- Besitzer - owner, dieser kann die Attribute des Gebietes ändern
+		- Namen unter dem sie im Spieler Hud angezeigt wird.
+	Jedes Gebiet besitze Attribute, die es beeinflussen.  
+		- Aneignen - claimable: kann sich das Gebiet jemand holen 
+		- Art des Gebietes - zone: allowed_zones = { "none", "city", "plot", "owned"  }
+		- Schutz - protected: nur der Besitzen (owner) kann hier interagieren
+		- Gäste -guests: jeder Besitzer kann andere Spieler einladen in seinem Gebiet zu interagieren
+		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg PvP abhängig
+		- Monster machen Schaden - mvp: der Monsterschaden kann auf dem Gebiet verboten werden
+		- Effect: jedes Gebiet kann einen Effekt haben. allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"}
+	 			hot: heal over time 
+				bot: breath over time
+  			holy: heal und bot
+	 			dot: damage over time
+	 			choke: reduce breath over time
+	 			evil: dot und choke	
 	
-Copyright (c) 2013
+	
+
+Copyright (c) 2022
 	ralf Weinert <downad@freenet.de>
 Source Code: 	
 	https://github.com/downad/rac
@@ -22,14 +44,14 @@ License:
 -- if there is an effect in the area - do it to the player
 local timer = 0
 minetest.register_globalstep(function(dtime)
-	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	local func_version = "1.0.1" -- angepasstes get_region_at_pos err == nil für keine ID bei Position pos gefunden
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] register_globalstep - Version: "..tostring(func_version)	)
 	end
 	local err = 0
 	
-	local name 
-	local pos 
+	local name 	-- Name des Spielers
+	local pos 	-- pos des Spielers
 
 	--color for PvP and protected
 	local color = rac.color["white"]	-- default
@@ -42,32 +64,34 @@ minetest.register_globalstep(function(dtime)
 	local region_name
 	local owner,plot_owner, city_owner
 	local effect1, effect2
-	local protected_string, enable_pvp, 
+	local protected_string, enable_pvp
 
 	-- der Timer läuft
-	timer = timer + dtime
+	rac.timer = rac.timer + dtime
 
-	-- das ist der String für den hud_update
+	-- das ist der String für das hud_update
 	local hud_string
 
 	-- gibt es eine region_id?
-	local is_region_id = false
 	local region_id
 		 
 	for _, player in pairs(minetest.get_connected_players()) do
 		name = player:get_player_name()
 		pos = vector.round(player:get_pos())
 
-		
 		err,region_id = rac:get_region_at_pos(pos)
-		if err >  0 then
+		
+--		minetest.log("action", "[" .. rac.modname .. "] register_globalstep - err: "..tostring(err)	)
+--		minetest.log("action", "[" .. rac.modname .. "] register_globalstep - region_id: "..tostring(region_id)	)
+--		minetest.log("action", "[" .. rac.modname .. "] register_globalstep - region_id: "..tostring(minetest.serialize(region_id))	)
+
+
+		-- keine Region gefunden
+		if err == nil then
+			err = 0 -- Alles ist gut, Globlastep geht auf region_id == nil
+		elseif err >  0 then
 			rac:msg_handling(err)
 		end	
-		if rac.debug and rac.debug_level == 10 then
-			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - type(region_id): "..tostring(type(region_id))	)
-			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - region_id: "..tostring(region_id)	)
-			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - #region_id: "..tostring(#region_id)	)
-		end
 		
 		if region_id == nil then
 			-- es gibt keine Region, nutze den wilderness Werte protected
@@ -92,17 +116,20 @@ minetest.register_globalstep(function(dtime)
 			end
 		elseif #region_id > 0  then
 			-- es gibt 1 oder 2 Regionen
-			-- pvp auf einer Region 				=> pvp allowed
-			-- protected auf einer Region 	=> protected
-			-- wenn 2 Regionen, dann wilderness = false!
-			-- owner: es wird der plot_owner angezeigt, wenn es den nicht gibt den city_owner 						
+			-- 2 bedeutet city und plot, es gelten die Einstellungen des plot
+			-- das muss noch geprüft werden
 			
 			is_wilderness = false
 			is_protected = false
 			is_pvp_allowed = false
 
+--			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - region_id[1]: "..tostring(region_id[1])	)
 			-- hole data von Region 1
-			err,data_table1 = rac:get_region_datatable(region_id[1])
+			err,data_table1 = rac:get_region_datatable(region_id[1]) 
+-- 			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - err: "..tostring(err)	)
+--			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - data_table1 serialize: "..tostring(minetest.serialize(data_table1))	)
+--			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - data_table1 string?: "..tostring((data_table1))	)
+--			minetest.log("action", "[" .. rac.modname .. "] register_globalstep - data_table1.effect : "..tostring(data_table1.effect)	)
 			if err == 0 then
 				-- hole den ersten owner
 				city_owner = data_table1.owner	
@@ -112,30 +139,30 @@ minetest.register_globalstep(function(dtime)
 				is_pvp_allowed = data_table1.pvp
 				-- 	hole region_name
 				region_name = data_table1.region_name
-				-- hole den Effecr
-				effect1 = data_table1.effect
+				-- hole den Effect
+				-- ist kein Effekt da sollte der Werte "none" sein
+				if data_table1.effect ~= "none" then
+					-- es können maximal 2 Effekt aktiv sein
+					local table_effect =  rac:convert_string_to_table(data_table1.effect, ",")
+					effect1 = table_effect[1]
+					if #table_effect > 1 then
+						effect2 = table_effect[2]
+					end
+				else
+					-- Effekt ist "none"
+					effect1 = data_table1.effect
+				end
 			else
 				-- err hat einen Fehler gemeldet
 				rac:msg_handling(err)
 			end
 			
-			-- only for debugging
-			if rac.debug == true and rac.debug_level == 10 then
-				minetest.log("action", "[" .. rac.modname .. "] ***********************************************")
-				minetest.log("action", "[" .. rac.modname .. "] region_name: "..tostring(region_name))
-				minetest.log("action", "[" .. rac.modname .. "] city_owner: "..tostring(city_owner))
-				minetest.log("action", "[" .. rac.modname .. "] is_protected: "..tostring(is_protected))
-				minetest.log("action", "[" .. rac.modname .. "] is_pvp_allowed: "..tostring(is_pvp_allowed))
-				minetest.log("action", "[" .. rac.modname .. "] effect: "..tostring(effect1))
-			end
-			
-			-- test Effect und do Effect
-			
+			-- teste ob der Effect ein erlaubter Effekt ist
 			if rac:string_in_table(effect1, rac.region_attribute.allowed_effects) then
 			-- do region effect
-				if effect1 ~= "none" and timer >= rac.effect.time then
+				if effect1 ~= "none" and rac.timer >= rac.region_effect.time then
 					rac:do_effect_to_player(player,effect1)
-					timer = 0
+					rac.timer = 0
 				end	
 			end		
 			
@@ -144,38 +171,7 @@ minetest.register_globalstep(function(dtime)
 		-- gibt es 2 Regionen muss
 		-- pvp und protected geprüft werden
 		elseif #region_id == 2 then
-			err,data_table2 = rac:get_region_datatable(region_id[2])
-			if err == 0 then
-				if data_table2.protected then
-					is_protected = true
-				end						
-				if data_table2.pvp == true then
-					is_pvp_allowed = true
-				end
-				-- finde den city_owner und den plot_owner
-				if data_table1.zone == "city" then
-					plot_owner = data_table.owner
-					city_owner = data_table1.owner
-					region_name = "City: ".. data_table1.region_name.." (Owner: "..city_owner..") Plot: "..data_table.region_name.." (Owner: "..plot_owner.." )" 
-				else
-					plot_owner = data_table1.owner
-					city_owner = data_table.owner				
-					region_name = "City: ".. data_table.region_name.." (Owner: "..city_owner..") Plot: "..data_table1.region_name.." (Owner: "..plot_owner.." )" 
-				end
-			else
-				-- err hat einen Fehler gemeldet
-				rac:msg_handling(err)
-			end
-			
-			-- test Effect und do Effect
-			effect2 = data_table2.effect
-			if rac:string_in_table(effect2, rac.region_attribute.allowed_effects) then
-			-- do region effect
-				if effect2 ~= "none" and timer >= rac.effect.time then
-					rac:do_effect_to_player(player,effect1)
-					timer = 0
-				end	
-			end			
+		 --- muss noch gemacht werden!
 
 		else -- mehr als 2 Regionen!
 			-- [2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",

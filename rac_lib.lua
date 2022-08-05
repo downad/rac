@@ -1,147 +1,35 @@
 --[[
 Region Areas and City
 	erstelle Regionen in deiner Minetestwelt
+	wilderness - alles was keiner Region zugewiesen ist
+	city: in der City kann man Bauplätze (hier plot genannt) markieren 
+	plot: diese Bauplätze können an Spieler vergeben werden.
+	Für jede Region kann man das Verhalten einstellen und außerdem hat sie einen
+		- Besitzer - owner, dieser kann die Attribute des Gebietes ändern
+		- Namen unter dem sie im Spieler Hud angezeigt wird.
+	Jedes Gebiet besitze Attribute, die es beeinflussen.  
+		- Aneignen - claimable: kann sich das Gebiet jemand holen 
+		- Art des Gebietes - zone: allowed_zones = { "none", "city", "plot", "owned"  }
+		- Schutz - protected: nur der Besitzen (owner) kann hier interagieren
+		- Gäste -guests: jeder Besitzer kann andere Spieler einladen in seinem Gebiet zu interagieren
+		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg PvP abhängig
+		- Monster machen Schaden - mvp: der Monsterschaden kann auf dem Gebiet verboten werden
+		- Effect: jedes Gebiet kann einen Effekt haben. allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"}
+	 			hot: heal over time 
+				bot: breath over time
+  			holy: heal und bot
+	 			dot: damage over time
+	 			choke: reduce breath over time
+	 			evil: dot und choke	
 	
-Copyright (c) 2013
+	
+
+Copyright (c) 2022
 	ralf Weinert <downad@freenet.de>
-Source Code: 	
 	https://github.com/downad/rac
 License: 
 	GPLv3
 ]]--
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
---	rac:get_region_at_pos(pos)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- Suche alle Regionen die an diese Position pos zu finden sind
--- 
---
--- input: 
---		pos 			als Positionsvektor
---
--- return:
--- 	table 			(mit allen Gebietes Id)
---  nil 				if there is wilderness/no region at pos
---
--- msg/error handling: YES, hard coded:
---			wenn mehr als 2 Regionen an dieser Position sind
---			err, id
-function rac:get_region_at_pos(pos)
-	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:get_region_at_pos - Version: "..tostring(func_version)	)
-	end
-	local err = 0 -- Kein Fehler
-	local id = {}
-	
-	for region_id, v in pairs(rac.rac_store:get_areas_for_pos(pos)) do
-			table.insert(id,region_id)
-	end 
-	-- ist der #id größer als 2, wurden mehr als 2 ID gefunden
-	if #id > 2 then
-		err = 3 -- [3] = "ERROR: rac:msg_handling(err, name) die Nummer err ist größer als erlaubt!!!!",
-		return err	-- ist der #id größer 0, wurde eine Region ID gefunden
-	elseif #id > 0 then
-		return err,id
-	else
-		return err,nil -- keine ID gefunden
-	end	
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- rac:player_is_guest (name,guests_stringe)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- überprüfe ob der Spieler in 'guests_string' seht
---
---
--- input:
---  name							Name des zu testenen Spieler
---  guests_string			Strinf mit einr Liste, mit "," getrennt
---
--- return:
---  true 			if the name is
--- 	return 		false if not
--- 
--- msg/error handling: no
-function rac:player_is_guest(name,guests_string)
-	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:player_is_guest - Version: "..tostring(func_version)	)
-	end
-	
-	local guests_table = rac:convert_string_to_table(guests_string, ",")
-	local is_guest = rac:string_in_table(name, guests_table)
-	
-	return is_guest
-end
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- rac:string_in_table(given_string, given_table)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- check if a string is in an table
---
---
--- input: 
---		given_string 	as string
---		given_table 	as table
---
--- return:
--- 	true 			if given_string is in given_table
--- 	false 		if not
---
--- msg/error handling: no
-function rac:string_in_table(given_string, given_table)
-	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:string_in_table - Version: "..tostring(func_version)	)
-	end
-  for i,v in ipairs(given_table) do
-    if v == given_string then
-      return true
-    end
-  end
-  return false
-end
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- rac:convert_string_to_table(string, seperator)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- split string into a table, default seperator is ","
---
---
--- input: 
---		string 			as string
---		seperator 	as string {default: seperator = ","}
---
--- return:
--- 	value_tables with the elements
---	
--- msg/error handling: no
-function rac:convert_string_to_table(string, seperator)
-	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:convert_string_to_table - Version: "..tostring(func_version)	)
-	end
-	if seperator == nil then
-		seperator = ","
-	end
-	local value_table = {}
-
-	value_table = string.split(string,seperator)
-
-	return value_table
-end
-
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
@@ -215,230 +103,51 @@ function rac:msg_handling(err, name)
 			minetest.log("action", "[" .. rac.modname .. "] ".. err)	
 		else
 		-- err ist vom Typ String!
-		-- es wurde aber kien Info vorgestellt
+		-- es wurde aber keine Info vorgestellt
 		-- Das ist ein Fehler!
 		-- [1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
-			minetest.log("error", "[" .. rac.modname .. "] Error: ".. rac.error_text[1])
+			minetest.log("error", "[" .. rac.modname .. "] Error: ".. rac.error_msg_text[1])
 		end
  	else
 		-- err ist nicht vom Typ number!
 		-- es wurde keine Nummer übertragen
 		-- Das ist ein Fehler!
 		-- [1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
-		minetest.log("error", "[" .. rac.modname .. "] Error: ".. rac.error_text[1])
+		minetest.log("error", "[" .. rac.modname .. "] Error: ".. rac.error_msg_text[1])
 	end
 end
 
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- rac:create_data_string(owner,region_name,claimable,zone,plot,protected,guests_string,PvP,MvP,effect,do_not_check_player)
+-- rac:load_regions_from_file()
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- create the designed data string for the AreaStore()
--- TESTE alle Werte ob sie erlaubnt sind
---	andernfalls, msg an player und entweder
---	ERROR oder
--- 	default	
+-- load the AreaStore() from file
 --
--- input:
---		owner								as string,
---		region_name					as string, 
---		claimable						as boolean
---		zone								as string, allowed_zones = { "none", "city", "plot", "owned"  },
---		protected						as boolean
---		guests_string				as string, comma separated Player_names
---		pvp									as boolean
---		mvp									as boolean
---		effect							as string, allowed: dot,hot,bot,choke,holy,evil
---		check_player				as boolean
 --
--- return:
---		err 	die Nummer des Fehlers
--- 		data_string for insert_area(edge1, edge2, DATA) as string
--- 			data must be an designed 
---
--- msg/error handling: YES
--- 	err,data_string
-function rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,check_player)
-	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:create_data_string - Version: "..tostring(func_version)	)
-	end
-	-- local err -> is hardcoded!
-	
-	-- default do_check_player = true
-	local do_check_player = true
-	if check_player ~= nil then
-		do_check_player = not check_player
-	end
-	-- check input-values
-	-- owner yes? NO = error
-	local player = minetest.get_player_by_name(owner)
-	-- ist der Owner ein Player
-	if player then
-		-- alles OK
-	elseif do_check_player == false then
-	-- muss der Player/Owner getestet werden?
-	-- do_check_player = false
-	-- nein, dann alles OK
-	else
-	-- es gibt den Player nicht!
-	-- er soll aber getestet werden
-	-- >>Fehler
-		return 4 -- [4] = "ERROR: func: rac:create_data_string - no Player found for owner! ",
-	end
-	
-	-- region_name
-	if not type(region_name) == "string" then
-		return 5 -- [5] = "ERROR: func: rac:create_data_string - no region name submitted! ",
-	end
-	
-	-- claimable
-	if not type(claimable) == "boolean" then
-		return 6 -- [6] = "ERROR: func: rac:create_data_string - no claimable set! ",
-	end
-	
-	-- zone
-	if not type(zone) == "string" then
-		return 7 -- 		[7] = "ERROR: func: rac:create_data_string - no zone set! ", 
-	elseif not rac:string_in_table(zone, rac.region_attribute.allowed_zones) then 
-		return 8 -- 	[8] = "ERROR: func: rac:create_data_string - zone ist nichtt in der Liste! "..tostring(rac.allowed_zones),
-	end
-	
-	-- protected
-	if not type(protected) == "boolean" then
-		return 9 -- [9] = "ERROR: func: rac:create_data_string - no protected set! ",
-	end
-	
-	-- guests
-	if not type(guests_string) == "string" or guests_string == nil then
-		return 10 -- [10] = "ERROR: func: rac:create_data_string - no guests set! ",
-	end
-	
-	
-	-- pvp
-	if not type(pvp) == "boolean" then
-		return 11 -- [11] = "ERROR: func: rac:create_data_string - no pvp set! ",
-	end
-	
-	
-	-- mvp
-	if not type(mvp) == "boolean"  then
-		return 12 -- [12] = "ERROR: func: rac:create_data_string - no mvp - Monsterdamage set! ",
-	end
-	
-	-- effect
-	if not type(effect) == "string" then
-		return 13 -- [13] = "ERROR: func: rac:create_data_string - effect ist nichtt in der Liste! "..tostring(rac.allowed_effects),
-	end
-	if not rac:string_in_table(effect, rac.region_attribute.allowed_effects) then 
-		minetest.log("action", "[" .. rac.modname .. "] rac:create_data_string - effect: "..tostring(effect))
-		return 14 -- [14] = "ERROR: func: rac:create_data_string - no effect set! ",
-	end
-
-
-	-- only for debugging
-	if rac.debug == true then
-		minetest.log("action", "[" .. rac.modname .. "] ***********************************************")
-		minetest.log("action", "[" .. rac.modname .. "] region_name: "..tostring(region_name))
-		minetest.log("action", "[" .. rac.modname .. "] owner: "..tostring(owner))
-		minetest.log("action", "[" .. rac.modname .. "] claimable: "..tostring(claimable))
-		minetest.log("action", "[" .. rac.modname .. "] zone: "..tostring(zone))
-		minetest.log("action", "[" .. rac.modname .. "] protected: "..tostring(protected))
-		minetest.log("action", "[" .. rac.modname .. "] guests: "..tostring(guests_string))
-		minetest.log("action", "[" .. rac.modname .. "] pvp: "..tostring(pvp))
-		minetest.log("action", "[" .. rac.modname .. "] mvp: "..tostring(mvp))
-		minetest.log("action", "[" .. rac.modname .. "] effect: "..tostring(effect))
-	end
-	-- create the datastring
-	-- data = "return {[\"owner\"] = \"playername\", [\"region_name\"] = \"Meine Wiese mit Haus\" , [\"protected\"] = true, 
-	--			[\"guests\"] = \"none/List\", [\"PvP\"] = false, [\"MvP\"] = true,
-	--			[\"zone\"] = \"city\"  [\"plot\"] = false, [\"effect\"] = \"none\", [\do_not_check_player\] = false}"
-	-- because in the datafield could only stored a string
-	local data_string = "return {owner = \""..owner.."\", region_name = \""..region_name.."\", claimable = "..tostring(claimable)..
-		", zone = \""..zone.."\", protected = "..tostring(protected)..", guests = \""..guests_string..
-		"\", pvp = "..tostring(pvp)..", mvp = "..tostring(mvp)..", effect = \""..effect.."\"}" 
- 
-	return 0,data_string
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- function rac:string_in_table(given_string, given_table)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- ist der 'string' in der übergebenen Tabelle 'given_table'
---
--- input: string, given_table
---
--- return: 
---		true if 'given_string' is in 'given_table'
--- 		false
---
+-- input: nothing
 -- msg/error handling: no
-function rac:string_in_table(given_string, given_table)
+-- return 0 = no error
+function rac:load_regions_from_file(check)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:string_in_table - Version: "..tostring(func_version)	)
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:load_regions_from_file - Version: "..tostring(func_version)	)
 	end
-  for i,v in ipairs(given_table) do
+	rac.rac_store:from_file(rac.worlddir .."/".. rac.store_file_name) 
 
-    if v == given_string then
-      return true
-    end
-
-  end
-  return false
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- rac:set_region(pos1,pos2,data)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- erzeuge eine neue region, 
--- update AreaStore,
--- save AreaStore
---
---
--- input:
--- 		pos1, pos2 		as vector
--- 		data 			as (designed) string 
---	  	use: rac:create_data(owner,region_name,protected,guests_string,PvP,MvP,effect,plot,city,do_not_check_player)
--- 			because in the datafield could only stored a string	
---
--- return:
---	err
---  id of new region
---
--- msg/error handling: YES
--- 	err,id
-function rac:set_region(pos1,pos2,data)
-	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
+	-- integritätscheck
+	if check == 1 then
+		rac:check_region_integrity()
 	end
-	local err = 0
-
-
-	-- falls data als Tabelle kommt
-	if type(data) ~= "string" then
-		if type(data) == "table" then
-			data = minetest.serialize(data)
-		else
-			-- data war kein String und keine table
-			return 15 --[15] = "ERROR: func: rac:set_region - übergebenes 'data' war weder table noch string!!!",
-		end
+ 	-- übeprüfe Version und passe das an
+	if check == 2 or check == 4 then
+		-- prüfe rac.region_attribute.version
+		rac:check_region_attribute_version()
 	end
-	-- füge alles in den Store
-	local id = rac.rac_store:insert_area(pos1, pos2, data)
-	-- speichere den store
-	rac.save_regions_to_file()
-	-- liefere err, id zurück
-	return err,id
+
+	
+	return 0 	-- No Error
 end
 
 
@@ -454,18 +163,195 @@ end
 --	nothing
 --
 -- return
---  0			alles ht geklappt
+--  0			alles hat geklappt
 --
 -- msg/error handling: YES
 --  0 = no error
 function rac:save_regions_to_file()
 	local func_version = "1.0.0"
-	if rac.show_func_version then
+	if rac.show_func_version and rac.debug_level > 0 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:save_regions_to_file - Version: "..tostring(func_version)	)
 	end
 	local err = 0 -- No Error
 	rac.rac_store:to_file(rac.worlddir .."/".. rac.store_file_name) 
 	return err 	
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:delete_region(id)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- delete region from AreaStore()
+-- the get_areas return a pointer, so re-copie the areastore and 'forget' to copie the region with the id
+--
+--
+-- input: 
+--		id 		als number
+--
+-- check if id ~=0
+-- msg/error handling:
+-- return 0 - no error
+-- return 1 -- "No region with this ID! func: raz:delete_region(id)", 
+function rac:delete_region(id)
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:delete_region - Version: "..tostring(func_version)	)
+	end
+	if rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:delete_region - id: "..tostring(id)	)
+	end
+	if rac.rac_store:get_area(id) == nil then
+		-- Error
+		return 48 -- [48] = "ERROR: func: rac:delete_region - No region with this ID! ",
+	end 
+	-- make a backup of all region, use date
+	local backup = rac.backup_file_name..(os.date("%y%m%d_%H%M%S")..".dat" )
+	err = rac:export(backup)
+	rac:msg_handling(err)
+	
+	local counter = 0
+	local temp_store = AreaStore() 
+	local region_values = {}
+
+	-- copy all regions to temp_store
+	while rac.rac_store:get_area(counter) do
+		if counter ~=id then
+			-- no errorcheck - get_area / insert_area are build in
+			region_values = rac.rac_store:get_area(counter,true,true)
+			temp_store:insert_area(region_values.min, region_values.max, region_values.data)
+		else
+			-- no errorcheck - remove_area is build in
+			minetest.log("action", "[" .. rac.modname .. "] rac:delete_region - überspringe id: "..tostring(id)	)
+			rac.rac_store:remove_area(id)
+		end
+		counter = counter + 1
+	end
+
+	-- recreate raz.raz_store
+	rac.rac_store = AreaStore()
+	region_values = {}
+
+	-- copy all value back
+	counter = 0
+	while temp_store:get_area(counter) do
+			-- no errorcheck - get_area / insert_area are build in
+			region_values = temp_store:get_area(counter,true,true)
+			rac:set_region(region_values.min, region_values.max, region_values.data)
+		counter = counter + 1
+	end
+	-- No Error
+	return 0 
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:update_regions_data(id,pos1,pos2,data_table)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- update datafield  AreaStore()
+--
+--
+-- input:
+--		id				as number - the ID to change
+-- 		pos1, pos2 		as vector (table)
+--		data_table		as (designed) string
+--
+-- return:
+--	true
+--
+-- msg/error handling: no
+--	return true wenn fertig 
+function rac:update_regions_data(id,pos1,pos2,data_table)
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:update_regions_data - Version: "..tostring(func_version)	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:update_regions_data(id,pos1,pos2,data) ID: "..tostring(id).." data: "..minetest.serialize(data_table)) 
+	end
+	local err = 0
+	local data_string = minetest.serialize(data_table)
+
+	local counter = 0
+
+	-- create an temporary AreaStore()
+	local temp_store = AreaStore() 
+	local region_values = {}
+
+	-- copy all regions to temp_store
+	while rac.rac_store:get_area(counter) do
+		if counter ~=tonumber(id) then
+			region_values = rac.rac_store:get_area(counter,true,true)
+			temp_store:insert_area(region_values.min, region_values.max, region_values.data)
+		else
+			temp_store:insert_area(pos1, pos2, data_string)
+		end
+		
+		counter = counter + 1
+	end
+
+	-- recreate rac.rac_store
+	rac.rac_store = AreaStore()
+	counter = 0
+
+	-- copy all regions from temp_store to rac.rac_store
+	while temp_store:get_area(counter) do
+		region_values = temp_store:get_area(counter,true,true)
+		rac.rac_store:insert_area(region_values.min, region_values.max, region_values.data)
+		counter = counter + 1
+	end
+	temp_store = {}
+
+	-- save changes
+	rac:save_regions_to_file()
+	if err == 0 then return true end
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+--	rac:get_region_at_pos(pos)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- Suche alle Regionen die an diese Position pos zu finden sind
+-- 
+--
+-- input: 
+--		pos 			als Positionsvektor
+--
+-- return:
+-- 	table 			(mit allen Gebietes Id)
+--  nil 				if there is wilderness/no region at pos
+--
+-- msg/error handling: YES, hard coded:
+--			wenn mehr als 2 Regionen an dieser Position sind
+--			err, id
+function rac:get_region_at_pos(pos)
+	local func_version = "1.0.1" -- angepasstes return, nil,nil wenn keine Region gefunden wurde.
+	if rac.show_func_version  and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:get_region_at_pos - Version: "..tostring(func_version)	)
+	end
+	local err = 0 -- Kein Fehler
+	local id = {}
+	
+	for region_id, v in pairs(rac.rac_store:get_areas_for_pos(pos)) do
+			table.insert(id,region_id)
+	end 
+	-- ist der #id größer als 2, wurden mehr als 2 ID gefunden
+	if #id > 2 then
+		err = 3 -- [3] = "ERROR: rac:msg_handling(err, name) die Nummer err ist größer als erlaubt!!!!",
+		return err	-- ist der #id größer 0, wurde eine Region ID gefunden
+	elseif #id > 0 then
+		return err,id
+	else
+		-- keine Region gefunden
+		if rac.debug_level > 0 then 
+			rac:msg_handling(50) -- [50] = "ERROR: func: rac:get_region_at_pos - keine Region an dieser Position gefunden!",
+		end
+		--	return nil,nil
+		return nil,nil -- keine ID gefunden
+	end	
 end
 
 
@@ -481,8 +367,7 @@ end
 --	id			number mit der ID der Region
 --
 -- return
---  err
---	data as table
+--  err, data as table
 --
 -- msg/error handling: YES
 --	err, data 
@@ -492,8 +377,13 @@ function rac:get_region_datatable(id)
 		minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - Version: "..tostring(func_version)	)
 	end
 	local err = 0
-	--	no_deserialize == false
+	--	no_deserialize == false = String
 	local err, pos1,pos2,data = rac:get_region_data_by_id(id,false)
+--	minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - id: "..tostring(id)	)
+--	minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - pos1: "..tostring(minetest.serialize(pos1))	)
+--	minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - pos2: "..tostring(minetest.serialize(pos2))	)
+--	minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - data: "..tostring(data)	)
+	
 	return err, data
 end
 
@@ -504,7 +394,7 @@ end
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 -- Hole zu einer region_id 
--- 	pos1,pos2
+-- 	pos1,pos2 = Ecke 1 und Ecke 2
 --	data  
 --
 --
@@ -525,7 +415,7 @@ end
 -- err, pos1,pos2,data
 function rac:get_region_data_by_id(id,no_deserialize)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:get_region_data_by_id - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -551,41 +441,253 @@ end
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- rac:get_owner_by_region_id(id)
+-- rac:string_in_table(given_string, given_table)
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- hole den data_string einer Region  
+-- ist der String 'given_string' in der übergebenen Tabelle 'given_table'
+--
+-- input: given_string, given_table
+--
+-- return: 
+--		true if 'given_string' is in 'given_table'
+-- 		false
+--
+-- msg/error handling: no
+function rac:string_in_table(given_string, given_table)
+	local func_version = "1.0.0"
+	if rac.show_func_version  and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:string_in_table - Version: "..tostring(func_version)	)
+	end
+  for i,v in ipairs(given_table) do
+    if v == given_string then
+      return true
+    end
+  end
+  return false
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:table_to_string(given_table)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- convert a table to a string
 --
 --
 -- input: 
---	id			number mit der ID der Region
+--		given_table		as table
 --
--- return
---  err
---	owner 		as String
+-- return:
+-- return string 		as string
 --
--- msg/error handling: YES
---	err, data 
-function rac:get_owner_by_region_id(id)
+-- msg/error handling: no
+function rac:table_to_string(given_table)
 	local func_version = "1.0.0"
-	if rac.show_func_version then -- and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:get_owner_by_region_id - Version: "..tostring(func_version)	)
+	if rac.show_func_version and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:table_to_string - Version: "..tostring(func_version)	)
 	end
-	if rac.debug then -- and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:get_owner_by_region_id - id: "..tostring(id)	)
+	local return_string = ""
+	for k, v in pairs(given_table) do
+		if k then
+			return_string = return_string..tostring(v)..","
+		end
 	end
-	local err = 0
-	local data 
-	--	no_deserialize == false
-	err,data = rac:get_region_datatable(id)
-	if err > 0 then
-		return err
-	elseif data.owner ~= nil then
-		return 0,data.owner
-	end
-	return 17 -- [17] = "ERROR: func: rac:get_owner_by_region_id - no owner in Region with this ID!",	
-		
+	return return_string
 end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:convert_string_to_table(string, seperator)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- split string into a table, default seperator is ","
+--
+--
+-- input: 
+--		string 			as string
+--		seperator 	as string {default: seperator = ","}
+--
+-- return:
+-- 	value_tables with the elements
+--	
+-- msg/error handling: no
+function rac:convert_string_to_table(string, seperator)
+	local func_version = "1.0.0"
+	if rac.show_func_version  and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:convert_string_to_table - Version: "..tostring(func_version)	)
+	end
+	if seperator == nil then
+		seperator = ","
+	end
+	local value_table = {}
+	minetest.log("action", "[" .. rac.modname .. "] rac:convert_string_to_table - string: "..tostring(string)	)
+
+	value_table = string.split(string,seperator)
+
+	return value_table
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:remove_value_from_table(value, given_table)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- remove a value from table
+--
+--
+-- input: 
+--		value 		as string
+--		given_table as table
+--
+-- return:
+--	table ohne das removed Element
+--
+-- msg/error handling: no
+function rac:remove_value_from_table(value, given_table)
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:remove_value_from_table - Version: "..tostring(func_version)	)
+	end
+	local return_table = {}
+	for k, v in ipairs(given_table) do
+		if k then
+		    if v ~= value then
+				table.insert(return_table, v)
+		    end
+		end
+	end
+	return return_table
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:player_can_modify_region_id(player)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- Diese Funktion gibt die Tabelle can_modify zurück
+-- über die Privilegien kann der Spieler seine Regionen verwalten
+-- ohne Privileg,wenn OWNER
+--		umbenennen
+--		schützen
+--		löschen
+-- mit Privileg	
+-- 	effect:				Einen Effekt für das Gebiet wählen 	
+--	mvp:					Monsterdamage auf dem Gebiet einschalten
+--	pvp:					PVP  auf dem Gebiet einschalten (falls PVP in der Welt erlaubt ist)
+-- 	guests:				Mit diesem Privileg kann der der Spieler Gäste auf sein Gebiet einladen. Die Gäste können in dem Gebiet handeln, auch wenn es geschützt ist.
+--	set:					Ein Spieler mit dem set-Privileg kann Gebiete claimen und kann folgendes bearbeiten
+--				umbenennen
+--			 	Schutz ein- oder auschalten
+--				Das Gebiet übertragen an einen anderen Spieler
+--				Das Gebiet löschen
+--	admin: Der Admin kann alles
+--
+-- input: 
+--		player			als Player Objekt
+--
+-- return:
+--  Table can_modify
+--		can_modify.owner (true/false)
+--		can_modify.name (true/false)
+--		can_modify.claimable (true/false)
+--		can_modify.zone (true/false)
+--		can_modify.protected (true/false)
+--		can_modify.guests (true/false)
+--		can_modify.pvp (true/false)
+--		can_modify.mvp (true/false)
+--		can_modify.effect (true/false)
+--		und zusätzlich
+--		can_modify.change_owner (true/false)
+--		can_modify.delete_region (true/false)
+--		can_modify.rename_region (true/false)
+--		can_modify.set (true/false)
+-- 		can_modify.admin (true/false)
+-- 		
+--
+-- msg/error handling: NO
+--
+function rac:player_can_modify_region_id(player_obj_or_string)
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:player_can_modify_region_id - Version: "..tostring(func_version)	)
+	end
+	local player
+  -- Errorhandling player ist ein String mit Name 
+  if type(player_obj_or_string) == "string" then
+  	player =  minetest.get_player_by_name(player_obj_or_string)
+  else
+   	player = player_obj_or_string
+  end
+
+	local can_modify = {
+		owner = false,
+		name = false,
+		claimable = false,
+		zone = false,
+		protected = false,
+		guests = false,
+		pvp = false,
+		mvp = false,
+		effect = false,
+		change_owner = false,
+		delete_region = false,
+		rename_region = false,
+		set = false,
+		admin = false,
+	}
+	
+	
+	if rac.debug and rac.debug_level > 5 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:player_can_modify_region_id")
+		minetest.log("action", "[" .. rac.modname .. "] rac:player_can_modify_region_id - can_modify: "..tostring(rac:table_to_string(can_modify)) )
+	end
+	-- teste die verschiedenen Privilegione	
+	if minetest.check_player_privs(player, { region_admin = true }) or (rac.serveradmin_is_regionadmin and minetest.check_player_privs(player, { server = true })) then 
+		can_modify = {
+			owner = true,
+			name = true,
+			claimable = true,
+			zone = true,
+			protected = true,
+			guests = true,
+			pvp = true,
+			mvp = true,
+			effect = true,
+			change_owner = true,
+			delete_region = true,
+			rename_region = true,
+			set = true,
+			admin = true,
+		}
+	end
+	if	minetest.check_player_privs(player, { region_effect = true }) then
+		can_modify.effect = true
+	end
+	if minetest.check_player_privs(player, { region_mvp = true }) then 
+		can_modify.mvp = true
+	end
+	if minetest.check_player_privs(player, { region_pvp = true }) then 
+		can_modify.pvp = true
+	end
+	if	minetest.check_player_privs(player, { region_guests = true }) then
+		can_modify.guests = true
+	end
+	if minetest.check_player_privs(player, { region_set = true }) then 
+		can_modify.owner = true
+		can_modify.name = true
+		can_modify.protected = true
+		can_modify.change_owner = true
+		can_modify.delete_region = true
+		can_modify.rename_region = true
+		can_modify.set = true
+	end	
+	return can_modify
+end -- rac:can_modify = rac:player_can_modify_region_id(player)
+
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
@@ -616,24 +718,19 @@ end
 --	err
 function rac:region_set_attribute(name, id, region_attribute, value, bool)
 	local func_version = "1.0.0"
-	if rac.show_func_version then
+	if rac.show_func_version  and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Version: "..tostring(func_version)	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - übergabe ++++++++++++++++++++++++++++++++++++++++++++++++++++ "	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - name: "..tostring(name)	)
+	end
+	if rac.debug and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Übergabe ++++++++++++++++++++++++++++++++++++++++++++++++++++ "	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Player name: "..tostring(name)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - id: "..tostring(id)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - region_attribute: "..tostring(region_attribute)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - value: "..tostring(value)	)		
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - bool: "..tostring(bool)	)
 	end
 	
-	-- -- -- -- 
-	-- Sting testen für 
-	--		region_attribute ==
-	--			region_name 
-	--					suche nach verbotenen Zeichen?
-	--			owner, guest 
-	--					unnötig, da das über existPlayer gehandelst wird		
-	-- -- -- --
+
 	
 	
 	local err = 0
@@ -649,12 +746,13 @@ function rac:region_set_attribute(name, id, region_attribute, value, bool)
 		-- get region values 
 		err,pos1,pos2,data = rac:get_region_data_by_id(id)
 		-- mal sehen was angekommen ist
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - nach check ID ++++++++++++++++++++++++++++++++++++++++++++++++++++ "	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - err: "..tostring(err) ) 
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - pos1: "..minetest.serialize(pos1)) 
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - pos2: "..minetest.serialize(pos2)) 
-		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - data: "..minetest.serialize(data)) 
-		
+		if rac.debug and rac.debug_level > 5 then
+			minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - nach check ID ++++++++++++++++++++++++++++++++++++++++++++++++++++ "	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - err: "..tostring(err) ) 
+			minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - pos1: "..minetest.serialize(pos1)) 
+			minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - pos2: "..minetest.serialize(pos2)) 
+			minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - data: "..minetest.serialize(data)) 
+		end
 		-- check if player is owner of the region
 		-- or admin (can_modify.admin == true
 		if name ~= data.owner then
@@ -683,6 +781,37 @@ function rac:region_set_attribute(name, id, region_attribute, value, bool)
 		-- region_name
 		elseif 	region_attribute == "region_name" then
 			if type(value) == "string" then 
+				-- -- -- -- 
+				-- String testen  
+--				minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Stringtesten für {region_name}!!!!!!: ")
+				--		region_attribute ==
+				--			region_name 
+				--			erlaubt [a-zA-Z], [ ], [0-9]
+				--			wegen der Sprache Deutsch [äöüßÄÖÜ]
+				-- eleminieren von gefährlichen Zeichen
+--				minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - ersetzen von \\ : "..tostring(value)	)
+				value = string.gsub(value, "\\", "")
+				--minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - ersetzen von \\ hat geklappt?: "..tostring(value)	)
+				minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Sonderzeichen? "..tostring(string.match(value, "%p"))	)
+				-- ist das nötig? Stand August 22 - NEIN
+				--local test_string = true
+				-- Sonderzeichen 
+				--if  string.match(value, "%p") == nil then
+				--	minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - [Sonderzeichen == nil]: "	)		
+				--else
+				--	minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - [ Sonderzeichen ist ~= nil]: "..tostring(false)	)
+				--	test_string = false		
+				--end				
+
+				-- mindestlänge 5 max: 64
+				if #value < 4 then
+					return 	46 --	[46] = "ERROR: func: rac:region_set_attribute - der Gebietsnamen ist zu kurz! ",	
+				elseif #value > 64 then
+					return 	47 -- [47] = "ERROR: func: rac:region_set_attribute - der Gebietsnamen ist zu lang! ",	
+				end
+				--
+				--			owner, guest müssen nicht getestet werden das geht über existPlayer
+				-- -- -- --
 				data.region_name = value
 			end 
 		-- owner
@@ -802,127 +931,139 @@ function rac:region_set_attribute(name, id, region_attribute, value, bool)
 	end
 end
 
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- rac:update_regions_data(id,pos1,pos2,data_table)
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- update datafield  AreaStore()
---
---
--- input:
---		id				as number - the ID to change
--- 		pos1, pos2 		as vector (table)
---		data_table		as (designed) string
---
--- return:
---	true
---
--- msg/error handling: no
---	return true wenn fertig 
-function rac:update_regions_data(id,pos1,pos2,data_table)
-	local func_version = "1.0.0"
-	if rac.show_func_version  then
-		minetest.log("action", "[" .. rac.modname .. "] rac:update_regions_data - Version: "..tostring(func_version)	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:update_regions_data(id,pos1,pos2,data) ID: "..tostring(id).." data: "..minetest.serialize(data_table)) 
-	end
-	local err = 0
-	local data_string = minetest.serialize(data_table)
-
-	local counter = 0
-
-	-- create an temporary AreaStore()
-	local temp_store = AreaStore() 
-	local region_values = {}
-
-	-- copy all regions to temp_store
-	while rac.rac_store:get_area(counter) do
-		if counter ~=tonumber(id) then
-			region_values = rac.rac_store:get_area(counter,true,true)
-			temp_store:insert_area(region_values.min, region_values.max, region_values.data)
-		else
-			temp_store:insert_area(pos1, pos2, data_string)
-		end
-		
-		counter = counter + 1
-	end
-
-	-- recreate rac.rac_store
-	rac.rac_store = AreaStore()
-	counter = 0
-
-	-- copy all regions from temp_store to rac.rac_store
-	while temp_store:get_area(counter) do
-		region_values = temp_store:get_area(counter,true,true)
-		rac.rac_store:insert_area(region_values.min, region_values.max, region_values.data)
-		counter = counter + 1
-	end
-	temp_store = {}
-
-	-- save changes
-	rac:save_regions_to_file()
-	if err == 0 then return true end
-end
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- rac:remove_value_from_table(value, given_table)
+-- rac:region_in_region(pos1,pos2)
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- remove a value from table
+-- Gibt es in dem Bereich, dieser neuen Region andere Regionen?
+-- - keine andere Region: jeder mit region_set darf setzen
+-- - eine andere Region: diese ist "city" -> admin kann plot oder outback setzen
+-- - eine andere Region: diese ist "outback" -> admin kann plot oder city setzen
+-- - zwei andere Regionen: outback und city -> admin kann plot
+-- - eine andere Region: diese ist "plot" dann darf man nichs setzen
+-- - mehrere anderer Regionen: man darf nicht setzen	
 --
 --
 -- input: 
---		value 		as string
---		given_table as table
+--		pos1,pos2 	als Positionsvektor
 --
 -- return:
---	table ohne das removed Element
---
+-- 	nil  - keine andere Region betroffen
+--	table - mit den ID der betroffenen Regionen
+-- 	
 -- msg/error handling: no
-function rac:remove_value_from_table(value, given_table)
+function rac:OLD_region_in_region(pos1,pos2)
 	local func_version = "1.0.0"
 	if rac.show_func_version  then
-		minetest.log("action", "[" .. rac.modname .. "] rac:remove_value_from_table - Version: "..tostring(func_version)	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:region_in_region - Version: "..tostring(func_version)	)
 	end
-	local return_table = {}
-	for k, v in ipairs(given_table) do
-		if k then
-		    if v ~= value then
-				table.insert(return_table, v)
-		    end
+-- get all regions in this box
+	local found = rac.rac_store:get_areas_in_area(pos1,pos2,true,true) --accept_overlap, include_borders, include_data):
+	local is_city = false
+	local count = 0
+	
+	-- loop all region
+	for region_id,v in pairs(found) do
+		-- if in one region the city-attribut is set is counts for all region there!
+		minetest.log("action", "[" .. rac.modname .. "] region_in_region! region_id "..tostring(region_id) )  
+--		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! city "..tostring(raz:get_region_attribute(region_id,"city")) )  
+--		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! plot "..tostring(raz:get_region_attribute(region_id,"plot")) )  
+
+		-- city hat plots und freie stellen zwischen den plots
+		-- in einer City kann der region_admin plots setzen.
+		if rac:get_region_attribute(region_id,"zone") == "city" then
+			is_city = true
 		end
+		-- are there more than 1 region
+		count = count + 1 
+	end -- for region_id,v in pairs(found) do
+	
+	-- check:
+	minetest.log("action", "[" .. rac.modname .. "] region_is_plot! count "..tostring(count) ) 
+	
+	-- es wurde keine Region gefunden - man kann diese Region also anlegen 
+	if count == 0 then
+		return nil			-- no regions found
 	end
-	return return_table
+	
+	-- 1 Region gefunden
+	-- ist es eine City und kein Plot, kann man die Region anlegen
+	if count == 1 then
+		if is_city then
+			return true
+		end	
+	-- mehr als 2 Regionen wurden gefunden, dann geht nichts
+	else
+		return count 	-- anzahl der gefunden Regionen
+	end
 end
 
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- rac:table_to_string(given_table)
+-- rac:get_region_attribute(id, region_attribute)
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- convert a table to a string
+-- get one attribute from data-field of a regions 
+-- hole das data field einer region und liefer den Wert zurück 
+-- 
 --
 --
 -- input: 
---		given_table		as table
+--			id					as number
+--			region_attribute 	as sting
 --
--- return:
--- return string 		as string
+-- return
+--		err, wenn es die id ncith gibt
+--		return Value des datafields
 --
--- msg/error handling: no
-function rac:table_to_string(given_table)
+-- msg/error handling: Yes 
+-- return err, value
+function rac:get_region_attribute(id, region_attribute)
 	local func_version = "1.0.0"
-	if rac.show_func_version  then
-		minetest.log("action", "[" .. rac.modname .. "] rac:table_to_string - Version: "..tostring(func_version)	)
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:get_region_attribute - Version: "..tostring(func_version)	)
 	end
-	local return_string = ""
-	for k, v in pairs(given_table) do
-		if k then
-			return_string = return_string..tostring(v)..","
-		end
-	end
-	return return_string
+	local err,data = rac:get_region_datatable(id)
+	if err > 0 then
+		rac:msg_handling(err)
+		return err
+	end			
+
+	-- check if the attribute is allowed
+	if not rac:string_in_table(region_attribute, rac.region_attribute.allowed_region_attribute) then
+		-- 		[39] = "ERROR: func: rac:get_region_attribute - The region_attribute did not fit!",
+		rac:msg_handling(39)
+		return 39
+	else
+    local return_value = ""
+		if 	region_attribute == "protected" then
+			return_value = data.protected 
+		elseif 	region_attribute == "region_name" then
+			return_value = data.region_name
+		elseif 	region_attribute == "owner" then
+			return_value = data.owner
+		elseif 	region_attribute == "guests" then
+			return_value = data.guests
+		elseif 	region_attribute == "pvp" then
+			return_value = data.pvp
+		elseif 	region_attribute == "mvp" then
+			return_value = data.mvp
+		elseif 	region_attribute == "effect" then
+			return_value = data.effect
+		elseif 	region_attribute == "version" then
+			return_value = data.version
+		elseif 	region_attribute == "zone" then
+			return_value = data.zone
+		elseif 	region_attribute == "claimable" then
+			return_value = data.claimable
+		end 
+
+		return return_value
+	end		
 end
+
+
 

@@ -1,8 +1,30 @@
 --[[
 Region Areas and City
 	erstelle Regionen in deiner Minetestwelt
+	wilderness - alles was keiner Region zugewiesen ist
+	city: in der City kann man Bauplätze (hier plot genannt) markieren 
+	plot: diese Bauplätze können an Spieler vergeben werden.
+	Für jede Region kann man das Verhalten einstellen und außerdem hat sie einen
+		- Besitzer - owner, dieser kann die Attribute des Gebietes ändern
+		- Namen unter dem sie im Spieler Hud angezeigt wird.
+	Jedes Gebiet besitze Attribute, die es beeinflussen.  
+		- Aneignen - claimable: kann sich das Gebiet jemand holen 
+		- Art des Gebietes - zone: allowed_zones = { "none", "city", "plot", "owned"  }
+		- Schutz - protected: nur der Besitzen (owner) kann hier interagieren
+		- Gäste -guests: jeder Besitzer kann andere Spieler einladen in seinem Gebiet zu interagieren
+		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg PvP abhängig
+		- Monster machen Schaden - mvp: der Monsterschaden kann auf dem Gebiet verboten werden
+		- Effect: jedes Gebiet kann einen Effekt haben. allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"}
+	 			hot: heal over time 
+				bot: breath over time
+  			holy: heal und bot
+	 			dot: damage over time
+	 			choke: reduce breath over time
+	 			evil: dot und choke	
 	
-Copyright (c) 2013
+	
+
+Copyright (c) 2022
 	ralf Weinert <downad@freenet.de>
 Source Code: 	
 	https://github.com/downad/rac
@@ -26,7 +48,7 @@ License:
 -- msg/error handling: no 
 function rac:do_effect_to_player(player,effect)
 	local func_version = "1.0.0"
-	if rac.show_func_version then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:do_effect_to_player - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -71,7 +93,7 @@ end
 -- msg/error handling: no
 function rac:do_effect_hot(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -99,7 +121,7 @@ end
 -- msg/error handling: no
 function rac:do_effect_dot(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -124,7 +146,7 @@ end
 -- msg/error handling: no
 function rac:do_effect_bot(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -153,7 +175,7 @@ end
 -- msg/error handling: no
 function rac:do_effect_choke(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -180,7 +202,7 @@ end
 -- msg/error handling: no
 function rac:do_effect_holy(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -208,7 +230,7 @@ end
 -- msg/error handling: no
 function rac:do_effect_evil(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level == 10 then
+	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0

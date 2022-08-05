@@ -1,9 +1,27 @@
 --[[
 Region Areas and City
 	erstelle Regionen in deiner Minetestwelt
-	wilderness - alles was keiner REgion zugewiesen ist
+	wilderness - alles was keiner Region zugewiesen ist
 	city: in der City kann man Bauplätze (hier plot genannt) markieren 
 	plot: diese Bauplätze können an Spieler vergeben werden.
+	Jeder Gebiet hat einen Zonenbezeichner:
+		allowed_zones = { "none", "city", "plot", "owned"  },
+		none 		- das Gebiet ist noch nicht besetzt
+		owned		- es gibt einen Besitzer,
+						Der Spieler hat ein Gebiet geclaimed
+						Dazu muss claimable = true
+						Ein spieler darf im "outback", auf einer "city" oder in der Wildnis ("none") claimen
+		outback	- Der region_admin kann ein Gebiet als outback markierern.
+						darauf kann man city oder plots setzen.	In der Regel ist das Outback nicht claimable.			 	
+		city		- Der region_admin kann Gebiete als city bestimmen und dafür Attribute festlegen.
+						Auf einem City-Gebiet kann der region_admin plots, Bauplätze für die Spieler festlegen.
+						Eine city kann in der Wildniss oder im outback sein.
+						In der Regel ist eine City-Zone nicht Claimable, die Spieler sollen hier nicht einfach so claimen können
+		plot		- der Bauplatz, er liegt immer auf einem anderen Gebiet.
+						Der Bauplatz wird von region_admin angelegt.
+						Er ist in der Regel nicht claimable. 
+						In der REgel überträgt der region_admin den Bauplatz an den Spieler.
+						!Auf dem plot gelten die Regeln des Besitzer!				 
 	Für jede Region kann man das Verhalten einstellen und außerdem hat sie einen
 		- Besitzer - owner, dieser kann die Attribute des Gebietes ändern
 		- Namen unter dem sie im Spieler Hud angezeigt wird.
@@ -60,11 +78,11 @@ rac = {
 	-- diese Attribute gelten für ein frisch angelegtes Gebiet	
 	region_attribute = {
 		-- in Version 1.0 sind diese Attribute erlaubt
-		allowed_region_attribute= {"owner","region_name","claimable","zone","plot","protected","guests","pvp","mvp","effect","check_player" },
+		allowed_region_attribute= {"owner","region_name","claimable","zone","protected","guests","pvp","mvp","effect" },
 		--	owner								as string, this MUST be!
 		--	region_name					as string, this MUST be!
 		--	claimable						as boolean
-		--	zone								as string, allowed_zones = { "none", "city", "plot", "owned"  },
+		--	zone								as string, allowed_zones = { "none", "outback", "city", "plot", "owned"  },
 		--	protected						as boolean
 		--	guests							as string, comma separated Player_names
 		--	pvp									as boolean
@@ -73,7 +91,7 @@ rac = {
 		--   version							as string
 		claimable = true, -- yes a player can claim this area
 		zone = "none",  
-		allowed_zones = { "none", "city", "plot", "owned"  },
+		allowed_zones = { "none","outback", "city", "plot", "owned"  },
 		protected = false,
 		guests = "-",		--empty list finals with ','
 		pvp = false,
@@ -82,9 +100,19 @@ rac = {
 		allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"},
 		version = "1.0",
 	},
-	serveradmin_is_regionadmin = false,
+	-- falls der Serveradmin automatisch region_admin sein soll
+	serveradmin_is_regionadmin = false, -- default: false
 
-	
+	area_names = {
+		[1] = "Haus {name}",
+		[2] = "Castle {name}",
+		[3] = "Schloß {name}",
+		[4] = "Burg {name}",
+		[5] = "Anwesen {name}",
+		[6] = "{name}ingen",
+		[7] = "{name}heim",
+		[8] = "{name}furt",
+	},
 	
 	-- if 'digging in an protected region damage the player
 	do_damage_for_violation = true,			-- default: true
@@ -97,19 +125,18 @@ rac = {
 	debug_level = 1, -- 1 - 10 von wenig bis alles
 	-- debug_level >8 um den bei show_func_version = true was zu sehen
 	
-	
-	-- der AreaStore() wird initialisiert
-	rac_store = AreaStore(),
+
 
 	-- some minimum values for the regions
 	minimum_width = 2,			-- the smalest region for player is a square of 3 x 3
-	minimum_height = 4,			-- the minimum high is 4 
+	minimum_height = 4,			-- the minimum heigh is 4 
 	maximum_width = 100,		-- for player
 	maximum_height = 60,			-- for player
 	landrush_width = 16,			-- if a landrush module will be created
 	landrush_height = 16,			-- if a landrush module will be created
 
 	-- some values for the region effects
+	timer = 0,
 	region_effect = {
 		-- the interval of dealing effects
 		time = 1,
@@ -127,6 +154,10 @@ rac = {
 		choke = 5,
 	},
 
+	
+	-- der AreaStore() wird initialisiert
+	rac_store = AreaStore(),
+	
 	-- the filename for AreaStore
 	store_file_name = "rac_store.dat",
 	export_file_name ="rac_export.dat",
@@ -155,6 +186,7 @@ rac = {
 
 	-- init command_players for chatcommands
 	command_players = {},
+	marker_modify_height = 2, -- falls bei setzen mit markern die Höhe nicht stimmt, halber minimum-Wert
 	marker1 = {},		-- for placing edges-boxes 
 	marker2 = {},		-- for placing edges-boxes 
 	set_command = {},	-- for punchnode function
@@ -168,29 +200,27 @@ rac = {
 --
 -- the functions for this mod
 dofile(rac.modpath.."/rac_lib.lua")			-- errorhandling: done
+dofile(rac.modpath.."/rac_lib_new.lua")			-- errorhandling: done
 dofile(rac.modpath.."/error_msg_text.lua")			-- Tabelle mit Error/msg Nummer
---dofile(rac.modpath.."/command_func.lua")	-- errorhandling: done
-
--- load converter for ShadowNinja areas
---dofile(rac.modpath.."/convert.lua")			-- errorhandling: done
+dofile(rac.modpath.."/command_func.lua")	-- errorhandling: done
 
 -- init globalstep for the hud
 dofile(rac.modpath.."/globalstep.lua") 		-- errorhandling: done
 
 -- do effects 
---dofile(rac.modpath.."/effect_func.lua")		-- errorhandling: done
+dofile(rac.modpath.."/effect_func.lua")		-- errorhandling: done
 
 -- create an hud
 dofile(rac.modpath.."/hud.lua")				-- errorhandling: done
 
--- modify mintest-functions
+-- modify minetest-functions
 dofile(rac.modpath.."/minetest_func.lua")	-- errorhandling: done
 
 -- set priviles and commands
 dofile(rac.modpath.."/privilegs.lua")	-- errorhandling: done	
 
--- set landrush items
---dofile(rac.modpath.."/items.lua")
+-- set items Landrush, entity,...
+dofile(rac.modpath.."/items.lua")
 
 -- set region RAC-Guide
 dofile(rac.modpath.."/rac_guide.lua")		
@@ -209,13 +239,9 @@ dofile(rac.modpath.."/rac_guide.lua")
 --err = rac:convert_region_to_version()
 --rac:msg_handling(err)
 
--- für das RAC-Guide Module! 
-	if default == nil then
-		minetest.log("error", "[" .. rac.modname .. "] minetest.register_node(\"rac:stone_with_guidebook\" - sounds= default.node_sound_wood_defaults() => kein default!!!!")
-	else
-		minetest.log("error", "[" .. rac.modname .. "] minetest.register_node(\"rac:stone_with_guidebook\" - sounds= default.node_sound_wood_defaults() gefunden!!!!")
-	end
+
 	
+--[[	
 -- zu Testzwecken
 --return {["y"] = -8, ["x"] = -555, ["z"] = -366}
 --return {["y"] = 21, ["x"] = -517, ["z"] = -320}
@@ -245,6 +271,18 @@ else
 	minetest.log("action", "[" .. rac.modname .. "] nach rac:create_data_string - region_id = "..tostring(id))
 end
 minetest.log("action", "[" .. rac.modname .. "] -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +")
+
+
+]]--
+
+-- load regions from file
+-- fill AreaStore()
+local check = 0 -- 1 check integrity, 2 check version, 4 check both.
+local err = rac:load_regions_from_file(check)
+rac:msg_handling(err)
+
+err = rac:delete_region(2)
+rac:msg_handling(err)
 
 
 -- all done then ....
