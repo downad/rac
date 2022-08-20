@@ -54,6 +54,11 @@ minetest.register_chatcommand("region", {
 	params = "<help> <guide> <status> <own> <pos1> <pos2> <max_y> <set> \n <show> <border> <export> <import> \n <import_areas> <player>",
 	privs = "interact", -- no spezial privileg
 	func = function(name, param)
+		local func_version = "1.0.0"
+		local func_name = "register_chatcommand"
+		if rac.show_func_version and rac.debug_level > 0 then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+		end
 		local player = minetest.get_player_by_name(name)
 		local pos = vector.round(player:get_pos())
 		if not player then
@@ -90,22 +95,22 @@ minetest.register_chatcommand("region", {
 		elseif param == "export" then 			-- 'end' if param == 
 			-- check privileg region_admin
 			if not minetest.check_player_privs(name, { region_admin = true }) then 
-				err = 30 -- "msg: You don't have the privileg 'region_admin'! ",		
+				err = 59 --[59] = "ERROR: func: register_chatcommand(\"region\"  - Dir fehlt das Privileg 'region_admin'!",
 			end
 			err = rac:export(rac.export_file_name)
 			if err == 0 then
-				rac:msg_handling(32, name)  -- 32 success
+				rac:msg_handling(58, func_name, name)  -- [58] = "Info: func: register_chatcommand(\"region\" - RegionStore wurde erfolgreich exportiert.",
 			end
 		elseif param == "import" then 			-- 'end' if param == 
 						-- check privileg region_admin
 			if not minetest.check_player_privs(name, { region_admin = true }) then 
-				err = 30 -- "msg: You don't have the privileg 'region_admin'! ",		
+				err = 59 --[59] = "ERROR: func: register_chatcommand(\"region\"  - Dir fehlt das Privileg 'region_admin'!",
 			end
 			rac:import(rac.export_file_name)
 		elseif param == "import_areas" then 	-- 'end' if param == 
 			-- check privileg region_admin
 			if not minetest.check_player_privs(name, { region_admin = true }) then 
-				err = 30 -- "msg: You don't have the privileg 'region_admin'! ",		
+				err = 59 --[59] = "ERROR: func: register_chatcommand(\"region\"  - Dir fehlt das Privileg 'region_admin'!",	
 			end
 			rac:import(rac.areas_rac_export)	
 		elseif param:sub(1, 6) == "player" then
@@ -113,7 +118,8 @@ minetest.register_chatcommand("region", {
 			err = rac:command_player_regions(header,param, name)
 		elseif param:sub(1, 4) == "mark" then
 			err = rac:command_mark(param, name)
-			
+		elseif param:sub(1, 6) == "remove" then -- 'end' if param == 
+			err = rac:command_remove(param, name)	
 
 		elseif param ~= "" then 				-- if no command is found 
 			minetest.chat_send_player(name, "Invalid usage.  Type \"/help region\" for more information.")

@@ -60,6 +60,17 @@ evil | beides, dot und choke
 + -	admin: Der Admin kann alles
 
 ## Commands
++ 'region help'					all: verweist auf 'help region' und zeigt die verwendeten ChatCommands. 
++ 'region help {command} - eine Kurzbeschreibung wie das Command funktioniert
++ 'region guide' 				all: ruft den rac-guide zur Verwaltung der Regionen auf. 
++ 'region border' 			Player: zeigt die Grenzen der eigenen Region an dieser Pos an
++ 'region border' 			admin: zeigt alle Regionen an dieser Pos an, outback,city,plot/owned wird unterschiedlich angezeigt. 
++	'region border {id}'	admin: zeigt die Region mit der ID an
++ 'region export'				admin: exportiert die Regionen als Datei <rac.export_file_name> ins world-Verzeichnis
++ 'region import'				admin: importiert die Regionen aus der Datei <rac.export_file_name> vom world-Verzeichnis
++ 'region show'					admin: zeigt eine Liste aller Regoinen mit ID, Region_Name, Owner, pvp und mvp Status
++ 'region show {id}'		admin: zeigt die Region mit dieser ID mit ID, Region_Name, Owner, pvp und mvp Status
++ 'region show {name}'	admin: zeigt die Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status
 
 
 

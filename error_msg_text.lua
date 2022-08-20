@@ -8,7 +8,7 @@
 	--		ERROR: 	-> Ausgabe in minetest.log
 	--		Info:		-> Ausgabe in minetest.log
 	--		msg: 		-> Ausgabe erfolgt nur an den Spieler
-rac.max_error = 46	
+rac.max_error = 70	
 rac.error_msg_text = {
 		[1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
 		[2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
@@ -44,8 +44,8 @@ rac.error_msg_text = {
 		[32] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (x)!",
 		[33] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (z)!",
 		[34] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (y)!",
-		[35] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu weit (x)!",
-		[36] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu weit (z)!",
+		[35] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu breit (x)!",
+		[36] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu breit (z)!",
 		[37] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu hoch (y)!",
 		[38] = "ERROR: func: rac:can_player_set_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
 		[39] = "ERROR: func: rac:get_region_attribute - The region_attribute did not fit!",
@@ -58,13 +58,27 @@ rac.error_msg_text = {
 		[46] = "ERROR: func: rac:region_set_attribute - der Gebietsnamen ist zu kurz! ",
 		[47] = "ERROR: func: rac:region_set_attribute - der Gebietsnamen ist zu lang! ",
 		[48] = "ERROR: func: rac:delete_region - No region with this ID! ",
-		[49] = "info: Falsche Region_ID eingegeben!  ",
+		[49] = "info: Falsche Region_ID eingegeben! ",
 		[50] = "ERROR: func: rac:get_region_at_pos - keine Region an dieser Position gefunden!",
 		[51] = "ERROR: func: rac:check_region_attribute_version - unpassenden Effect gefunden!",
 		[52] = "ERROR: func: rac:check_region_attribute_version - keine City und keine Zone gefunden, setzte default!",
 		[53] = "ERROR: func: rac:can_player_set_region - Das Gebiete hat kein 'claimable' gesetzt!",
 		[54] = "ERROR: func: rac:export - keine Data-Tabnelle bekommen",
 		[55] = "ERROR: func: rac:import - ERROR: File does not exist! ",
-		
+		[56] = "ERROR: func: rac:command_status - Dir fehlt das Privileg 'interact'!",
+		[57] = "ERROR: func: rac:command_show - Dir fehlt das Privileg 'region_admin'!",
+		[58] = "Info: func: register_chatcommand(\"region\" - RegionStore wurde erfolgreich exportiert.",
+		[59] = "ERROR: func: register_chatcommand(\"region\" - Dir fehlt das Privileg 'region_admin'!",
+		[60] = "ERROR: func: load_regions_from_file - Der Check-Value ist noch erlaubt!",
+		[61] = "ERROR: func: get_region_at_pos - mehr als 3 Regionen an diesr Position gefunden",
+		[62] = "ERROR: func: can_interact - 2/3 Regionen gefunden, sei dürfen so ab er nicht liegen",
+		[63] = "ERROR: func: can_interact - es liegen mehr als 3 Regionen an dieser Position, das darf nicht sein!!!!",
+		[64] = "ERROR: func: command_set - Pos1 fehlt",
+		[65] = "ERROR: func: command_set - Pos2 fehlt",
+		[66] = "ERROR: func: command_set - region_name zu kurz",
+		[67] = "msg: func: rac:get_region_center_by_name_and_pos - keine Region an dieser Position gefunden!",
+		[68] = "ERROR: func: rac:command_border - Dir fehlt das Privileg 'interact'!",
+		[69] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
+		[70] = "msg: Invalid usage.  Type \"/region help {command}\" for more information.",
 		
 	}

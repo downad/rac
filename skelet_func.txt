@@ -22,11 +22,21 @@ skelett function
 -- 	err,id
 function ()
 	local func_version = "1.0.0"
+	local func_name = "rac:export"
 	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
 
 		
 		
+msg/error handling: yes
+ PRÜFE die Eingaben!
 		
 		
 		
+		rac:msg_handling(err,func_name)
+		
+	if err ~= 0 then
+		rac:msg_handling(err,func_name)
+	end
 		

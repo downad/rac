@@ -89,35 +89,18 @@ rac = {
 		--	mvp									as boolean
 		--		effect							as string, allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"},
 		--   version							as string
-		claimable = true, -- yes a player can claim this area
+		claimable = false, -- true wenn der Player das Gebiet claimen darf
 		zone = "none",  
 		allowed_zones = { "none","outback", "city", "plot", "owned"  },
-		protected = false,
-		guests = "-",		--empty list finals with ','
+		protected = true,	-- der admin stellt das um wenn nötig
+		guests = "",		--empty list finals with ','
 		pvp = false,
 		mvp = true,
 		effect = "none",
 		allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"},
 		version = "1.0",
 	},
-	-- falls der Serveradmin automatisch region_admin sein soll
-	serveradmin_is_regionadmin = false, -- default: false
 
-	area_names = {
-		[1] = "Haus {name}",
-		[2] = "Castle {name}",
-		[3] = "Schloß {name}",
-		[4] = "Burg {name}",
-		[5] = "Anwesen {name}",
-		[6] = "{name}ingen",
-		[7] = "{name}heim",
-		[8] = "{name}furt",
-	},
-	
-	-- if 'digging in an protected region damage the player
-	do_damage_for_violation = true,			-- default: true
-	-- the damage a player get for 'digging' in a protected region
-	damage_on_protection_violation = 4, -- default: 4. Der Spieler bekommt 4 Schaden wenn er in einem Geschützten Gebiet etwas abbaut.
 
 	-- for debugging
 	debug = true, 
@@ -125,9 +108,7 @@ rac = {
 	debug_level = 1, -- 1 - 10 von wenig bis alles
 	-- debug_level >8 um den bei show_func_version = true was zu sehen
 	
-
-
-	-- some minimum values for the regions
+	-- some minimum/maximum values for the regions
 	minimum_width = 2,			-- the smalest region for player is a square of 3 x 3
 	minimum_height = 4,			-- the minimum heigh is 4 
 	maximum_width = 100,		-- for player
@@ -160,7 +141,7 @@ rac = {
 	
 	-- the filename for AreaStore
 	store_file_name = "rac_store.dat",
-	export_file_name ="rac_export.dat",
+	export_file_name ="rac_export_file.txt",
 	backup_file_name ="rac_backup_",
 	
 	-- init saved huds 
@@ -191,7 +172,10 @@ rac = {
 	marker2 = {},		-- for placing edges-boxes 
 	set_command = {},	-- for punchnode function
 	
---	error_msg_text = {},
+--	list_of_marker = {}, -- die Table für die Marker
+--	marker_verify_timer = 10, -- prüfe alle X sekunden - default 300 Sekunden = 5 Minuten
+--	marker_timer = 0,
+--	marker_delete_time = 600, -- nach 10 minuten löschen sich die Marker selbständig 
 }
 
 -----------------------------------
@@ -199,6 +183,7 @@ rac = {
 -----------------------------------
 --
 -- the functions for this mod
+dofile(rac.modpath.."/settings.lua")			-- errorhandling: NONE
 dofile(rac.modpath.."/rac_lib.lua")			-- errorhandling: done
 dofile(rac.modpath.."/rac_lib_new.lua")			-- errorhandling: done
 dofile(rac.modpath.."/error_msg_text.lua")			-- Tabelle mit Error/msg Nummer
@@ -239,7 +224,9 @@ dofile(rac.modpath.."/rac_guide.lua")
 --err = rac:convert_region_to_version()
 --rac:msg_handling(err)
 
-
+minetest.log("action", "[" .. rac.modname .. "] Daten aus mintest.conf: enable_pvp = "..tostring(rac.enable_pvp))
+local serveradmin = minetest.settings:get("name")
+minetest.log("action", "[" .. rac.modname .. "] Daten aus mintest.conf: serveradmin = "..tostring(serveradmin))
 	
 --[[	
 -- zu Testzwecken
@@ -279,10 +266,10 @@ minetest.log("action", "[" .. rac.modname .. "] -- + -- + -- + -- + -- + -- + --
 -- fill AreaStore()
 local check = 0 -- 1 check integrity, 2 check version, 4 check both.
 local err = rac:load_regions_from_file(check)
-rac:msg_handling(err)
+rac:msg_handling(err,"init.lua")
 
-err = rac:delete_region(2)
-rac:msg_handling(err)
+--err = rac:delete_region(2)
+-- rac:msg_handling(err)
 
 
 -- all done then ....

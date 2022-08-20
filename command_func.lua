@@ -80,15 +80,16 @@ function rac:command_help(param, name)
 	local chat_end 
 	
 	
-	if command == "help" then
+	if command == "help" or value[1] == help then
 		chat_end = chat_start.." {command}' um mehr Infos zu dem Command zu erhalten. [privileg: interact]"
 	elseif command == "guide" then
-		chat_end = chat_start.."' open the RAC-Guidebook. [privileg: interact]"
+		chat_end = chat_start.."' zeigt den rac-guide zur Verwaltung der Regionen an. [privileg: interact]"
 --	elseif command == "status" then
 --		chat_end = chat_start.."' to get some more infos about the region at your position. [privileg: interact]"
 	elseif command == "border" then
-		chat_end = chat_start.."' um dein Gebiet sichtbar zu machen. [privileg: interact]"..
-			"\nDer region_admin kann mit '/region border {name}' die Region eines Players sicht barmachen. [privileg: region_admin]"
+		chat_end = chat_start.."' um dein Gebiet an dieser Position sichtbar zu machen. [privileg: interact]"..
+			"\nDer region_admin kann mit '/region border' alle Regionen an dieser Stelle sichtbar machen. [privileg: region_admin]"..
+			"\nDer region_admin kann mit '/region border {id}' die Region mit der ID sichtbar machen. [privileg: region_admin]"
 	elseif command == "own" then
 		chat_end = chat_start.."' teige eine Liste deiner Regionen. [privileg: region_set]"
 	elseif command == "pos1" then
@@ -119,23 +120,33 @@ function rac:command_help(param, name)
  end
 
 
------------------------------------------
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
 -- command status
 -- privileg: interact
 --
------------------------------------------
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 -- called: 'region status'
 -- sends the player a list with details of the regions
+--
+--
 -- input:
 --		name 	(string) 	of the player
 --		pos 	(table)		of the player
+--
+-- return:
+--		0
+--
 -- msg/error handling: 
--- return 20 --"msg: You don't have the privileg 'interact'! ",
+-- return 56 -- [56] = "ERROR: func: rac:command_status - Dir fehlt das Privileg 'interact'!",
 -- return 0	-- no error
 function rac:command_status(name,pos)
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:command_status - Version: "..tostring(func_version)	)
+	end
 	if not minetest.check_player_privs(name, { interact = true }) then 
-		return 20 --"msg: You don't have the privileg 'interact'! ",		
+		return 56 --[56] = "ERROR: func: rac:command_status - Dir fehlt das Privileg 'interact'!",
 	end
 	for region_id, v in pairs(rac.rac_store:get_areas_for_pos(pos)) do
 		local counter = 1
@@ -151,6 +162,245 @@ function rac:command_status(name,pos)
 	return 0 -- no error
 end
  
+ 
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command border
+-- privileg: interact for own region
+-- privileg: region_admin for more
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- Das Command 'region border'
+-- macht die Grenzen der Region sichtbar.
+--	Aufruf als Player
+--		'region border' 			zeigt die Grenzen der eigenen Region an dieser Pos an
+--	Aufruf als region_admin
+-- 		'region border' 			zeigt alle Regionen an, dabei werden outback,city,plot/owned in unterschiedlichen Farben angezeigt. 
+--		'region border {id}'	zeigt die Region mit der ID an
+--
+-- input:
+--		param 	(string)
+--			der String beinhaltetet den 'border'-Anteil des Commands
+--			dieser wird mit sub(7,-1) ignoriert
+--			nach dem split sind folgende Fälle möglich
+--			value[1]  	ist eine Zahl -> die ID der Region ie angezeigt werden soll
+--			value[1] 		= nil, da keine ID mitgegeben wurde
+--		name 	(string) 	of the player
+--
+-- return:
+--	return 68 --		[68] = "ERROR: func: rac:command_border - Dir fehlt das Privileg 'interact'!",
+-- 	return 0	-- no error
+--
+-- msg/error handling: yes
+-- 		check privilegs
+function rac:command_border(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_border"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err 
+	local region_id  = nil	
+	local pos1, pos2, data 
+	local center
+	local regions_at_pos
+
+	-- check privs
+	if not minetest.check_player_privs(name, { interact = true }) then 
+		return 68 --		[68] = "ERROR: func: rac:command_border - Dir fehlt das Privileg 'interact'!",
+	end
+	-- checke admin
+	local can_modify = rac:player_can_modify_region_id(name)
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border ID = can_modify.admin = {"..tostring(can_modify.admin).."}" ) 
+	
+	-- get values of param
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border param = "..tostring(param) ) 
+	local value = string.split(param:sub(7, -1), " ") 
+
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border value = "..tostring(value) ) 
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border #value = "..tostring(#value) ) 
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border value[1] = "..tostring(value[1]) ) 
+	if value[1] ~= nil then
+		region_id = tonumber(value[1])
+	end	
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border ID = value[1] = "..tostring(value[1]) ) 
+	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border region_id = "..tostring(region_id) ) 
+	 
+	local player = minetest.get_player_by_name(name)
+	--local player = minetest.env:get_player_by_name(name)
+	local pos = player:get_pos()		
+	
+	-- normaler Player es wird nur die eigene Region angezeigt
+	if can_modify.admin == true then
+		-- nur die Region mit der ID anzeigen
+		if region_id ~= nil then
+			rac:draw_border(region_id)	
+		else -- if region_id ~= nil then
+			-- hole alle Regionen an dieser Stelle
+			for region_id, v in pairs(rac.rac_store:get_areas_for_pos(pos)) do	
+				minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border k = "..tostring(region_id) )  
+				rac:draw_border(region_id)	
+			end
+		end
+	end
+end 
+ 
+ 
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:import(import_file_name)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- Load the exported AreaStore() from file
+-- importiere ein Backup der Regionen
+--
+-- input: 
+--		import_file_name as string-file-path
+--
+--
+-- msg/error handling:
+-- return 0 - no error
+-- return 55 -- "ERROR: File does not exist!  func: func: rac:import(import_file_name) - File: "..minetest.get_worldpath() .."/rac_store.dat (if not changed)",
+function rac:import(import_file_name)
+	local func_version = "1.0.0"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:import - Version: "..tostring(func_version)	)
+	end
+	local counter = 1
+	local pos1 
+	local pos2
+	local data
+ 
+	-- does the file exist?
+	local file = rac.worlddir .."/"..import_file_name 
+	minetest.log("action", "[" .. rac.modname .. "] rrac:import(import_file_name) :"..tostring(import_file_name) )
+	if rac:file_exists(file) ~= true then
+		--minetest.log("action", "[" .. rac.modname .. "] rac:file_exists(file) :"..tostring(rac:file_exists(file))) 
+		minetest.log("error", "[" .. rac.modname .. "] rac:file_exists(file) :"..file.." does not exist!") 
+		return 	--	[55] = "ERROR: func: rac:import - ERROR: File does not exist! ",
+	end		
+	-- load every line of the file 
+	local lines = rac:lines_from(file)
+
+	-- loop all lines, step 3 
+	-- set pos1, pos2 and data and rac:set_region
+	while lines[counter] do
+		-- deserialize to become a vector
+		pos1 = minetest.deserialize(lines[counter])
+		pos2 = minetest.deserialize(lines[counter+1])
+		-- is an string
+	 	data = lines[counter+2]
+
+		rac:set_region(pos1,pos2,data)
+	 	counter = counter + 3
+	 	minetest.log("action", "[" .. rac.modname .. "] rac:import -pos1"..tostring(pos1).." pos2 "..tostring(pos2).." data "..data )
+		
+	end
+	-- Save AreaStore()
+	rac:save_regions_to_file()
+	-- No Error
+	return 0
+end 
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command show 
+-- privileg: region_admin *or call by command_status
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region show' <id1> <id2>  		<optional>
+-- sends the player a list of regions
+-- 
+-- input: 
+-- 	header									false/status
+--														status, damit ein Player das aufrufen kann.
+-- 	name										playername 
+-- 	list_start,list_end			nil,nil -> dann wird die komplette Liste ausgegeben
+-- 															andernfalls von :start bis _end
+--
+-- return:
+--	0
+--
+-- msg/error handling:
+-- return 0 - no error
+-- [57] = "ERROR: func: rac:command_show - Dir fehlt das Privileg 'region_admin'!",
+function rac:command_show(header, name,list_start,list_end)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_show"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+--	local region_values = {}
+--	local pos1 = ""
+--	local pos2 = ""
+--	local data = ""
+	local chat_string = ""
+	local chat_string_start = "### List of Regions ###"
+	if header == false or header == "status" then
+		chat_string_start = ""
+	end
+	-- no privileg check: header == status then command_show is called by command_status 
+	-- else privileg region_admin / can_modify.admin == true
+	-- rac:player_can_modify_region_id(player)
+	local can_modify = rac:player_can_modify_region_id(name)
+	if header ~= "status" then
+		if not can_modify.admin then 
+			return 57 -- [57] = "ERROR: func: rac:command_show - Dir fehlt das Privileg 'region_admin'!",
+		end	 
+	end
+
+	-- if list_start is not set
+	-- list_end is also not set
+	-- list all, from 0 to end (-1)
+	if list_start == nil then
+		list_start = 0
+		list_end = -1
+	elseif list_end == nil then
+		-- list_start is set an list_end not 
+		-- show regions with id = list_start
+		list_end = list_start
+	end
+
+	-- end < start then change start and end
+	if list_end < list_start and list_end ~= -1 then
+		local changer = list_end
+		list_end = list_start 
+		list_start = changer
+	end
+	
+	local stop_list = list_end
+	local counter = list_start
+		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - list_start: "..tostring(list_start)	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - list_end: "..tostring(list_end)	)
+
+	-- get all regions in AreaStore()
+	while rac.rac_store:get_area(counter) do
+		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - stop_list: "..tostring(stop_list)	)
+	
+		
+		if counter <= stop_list or stop_list < 0 then
+			local err,data = rac:get_region_datatable(counter)
+			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - err: "..tostring(err)	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - data: "..tostring(minetest.serialize(data) )	)
+			if err > 0 then
+				rac:msg_handling(err,func_name)
+			else
+				-- baue die Ausgaben zusammen
+				-- was soll da rein?
+				-- id, playername, Name der Region, pvp, mpv?
+				chat_string = chat_string.."\n ID: "..tostring(counter).." "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp)
+			end 
+		end -- if counter <= stop_list or stop_list < 0 then
+		counter = counter + 1
+	end --while rac.rac_store:get_area(counter) do
+	minetest.chat_send_player(name, chat_string_start..chat_string..".")
+	return 0
+end
+
+
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
 -- rac:command_pos(name,pos,edge,set_entity)
@@ -217,6 +467,61 @@ function rac:command_pos(name,pos,edge,set_entity)
 	end
 
 end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:command_change_owner(param, name, by_function)
+-- privileg: region_set, region_admin, 
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region change_owner {id} {playername}
+-- input:
+--		param 	(string) ist ein String mit einem Leerzeichen
+--											value[1] ist die IDm value[2] der neue Name
+--		name 	(string) 	of the player
+-- 		by_function as boolean		falls die Funktion von einer anderen Funktion aufgerufen wird.
+--	
+-- msg/error handling:
+-- return 		[69] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
+-- return err = return from region_set_attribute
+-- return 		[70] = "msg: Invalid usage.  Type \"/region help {command}\" for more information.",
+function rac:command_change_owner(param, name, by_function)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_change_owner"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err = 0 -- alles ok
+	local value
+	-- check privileg
+	-- wenn der Aufruf mit by_function kommt muss nicht nach privs geschaut werden
+	-- ein "Käufer" eines Plot muss nicht zwingend das recht haben
+	if by_function ~= true then
+		local can_modify = rac:player_can_modify_region_id(player)	
+		if can_modify.admin == false and can_modify.set == false then 
+			return 69 --	[69] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
+		end
+	end
+	-- get the args after change_owner
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: must be a name of a player
+	if by_function ~= true then
+		value = string.split(param:sub(13, -1), " ") --13 "change_owner"
+	else
+		value = string.split(param, " ") 
+	end
+	if value[1] == nil or value[2] == nil then
+		minetest.chat_send_player(name, rac.error_msg_text[70] )
+		return 70 -- [70] = "msg: Invalid usage.  Type \"/region help {command}\" for more information.",
+	else
+		err = rac:region_set_attribute(name, value[1], "owner", value[2]) 
+		--rac:msg_handling(err, name) --  message and error handling
+	end
+	return err
+end
+
+
 
 -----------------------------------------
 --
@@ -333,7 +638,7 @@ end
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 -- claime ein Gebiet,
 -- pos1, pos2 und region_name sind nötig
--- owner wird automatisch gesetzt, der rest über rac_guide
+-- owner wird automatisch gesetzt, der Rest über rac_guide
 -- pos1 und pos 2 stecken in
 --		rac.command_players[name].pos1
 --		rac.command_players[name].pos2
@@ -342,16 +647,23 @@ end
 --		param 	(string) 	Name der Region
 --		name 	(string) 		Name des Player
 --
+-- return:
+-- 	0			alles OK
+--	err aus anderen Funktionen
+-- 	return 43 -- [43] = "ERROR: func: rac:command_set - kein Spieler mit dem Namen gefunden",
+--	return 44 --	[44] = "ERROR: func: rac:command_set - Dir fehlt das Privileg 'region_set! ",
+--
 -- msg/error handling: yes
--- return err if privileg is missing
--- return 0 - no error
+-- checke priv, player
 function rac:command_set(param, name) 
 	local func_version = "1.0.0"
+	local func_name = "rac:command_set"
 	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:command_set - Version: "..tostring(func_version)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
+
 	local err = 0 
-	local admin_table
+	local zone_table
 	local region_data_string,data
 	local pos1,pos2
 	-- check privileg
@@ -363,88 +675,122 @@ function rac:command_set(param, name)
 	
 	local can_modify = rac:player_can_modify_region_id(player)
 	if can_modify.admin or can_modify.set then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Erlaubnis zum Claimen - can_modify.admin "..tostring(can_modify.admin)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Erlaubnis zum Claimen - can_modify.set "..tostring(can_modify.set)	)
+		-- passen den region_name an
 		local region_name = param:sub(5, -1)
+		
+		-- prüfe pos1 und pos2
 		if not rac.command_players[name] or not rac.command_players[name].pos1 then
 			minetest.chat_send_player(name, "Position 1 missing, use \"/region pos1\" to set.")
+			rac:msg_handling(64,func_name) -- [64] = "ERROR: func: command_set  - Pos1 fehlt",
+			return 64
 		elseif not rac.command_players[name].pos2 then
 			minetest.chat_send_player(name, "Position 2 missing, use \"/region pos2\" to set.")
+			rac:msg_handling(65,func_name) -- [65] = "ERROR: func: command_set  - Pos2 fehlt",
+			return 65
 		elseif string.len(region_name) < 1 then
 			minetest.chat_send_player(name, "please set a name behind set, use \"/region set {region_name}\" to set.")
-		else
-			-- Darf der Spieler oder der Admin hier etwas setzen?
-			err,admin_table = rac:can_player_set_region(rac.command_players[name].pos1,rac.command_players[name].pos2, name)
-			-- err = true,false, Nummer der ErrorMsg
-			if type(err) == "number" then
-				return err
-			end
-			-- setzte die Werte, ubnbekannte Werte = default
-			local owner = name
-			-- region_name wurde übergeben"
-			local claimable = rac.region_attribute.claimable
-			local zone = "owned" -- wenn ein Spieler claimed dann ist es immer owned
-			local protected = true
-			local guests_string = rac.region_attribute.guests
-			local pvp = rac.region_attribute.pvp
-			local mvp = rac.region_attribute.mvp
-			local effect = rac.region_attribute.effect
-			local do_not_check_player = true -- der Spieler muss nicht überprüft werden
-
-
-			-- der Spieler darf die Region setzen
-			if err == true then
-				-- rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
-				err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect) 
-				if err > 0 then
-					minetest.log("action", "[" .. rac.modname .. "] can not create data!" ) 
-					rac:msg_handling(err) 
-				else
-					rac:set_region(rac.command_players[name].pos1,rac.command_players[name].pos2,region_data_string)
-					minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< angelegt!")
-				end	
-			elseif err == false then
-				-- darf der Spieler den plot übernehmen
-				if admin_table.change_owner then
-					zone = "plot"
-					claimable = false -- der plot ist nicht mehr claimable 
-					err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect) 
-					if err > 0 then
-						minetest.log("action", "[" .. rac.modname .. "] can not create data!" ) 
-						rac:msg_handling(err) 
-					else
-						err, pos1,pos2,data = rac:get_region_data_by_id(admin_table.plot_id,false)
-						rac:msg_handling(err)
-						err = rac:update_regions_data(id,pos1,pos2,region_data_string)
-						rac:msg_handling(err)
-						minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< angelegt!")
-					end		
-				end
-			end
-			-- für den Admin
-			if can_modify.admin then
-				if admin_table.outback == true then
-					zone = "outback"
-				elseif admin_table.city == true then
-					zone = "city"
-				else 
-					zone = "plot"
-				end
-				err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect) 			
-				if err > 0 then
-					minetest.log("action", "[" .. rac.modname .. "] can not create data!" ) 
-					rac:msg_handling(err) 
-				else
-					rac:set_region(rac.command_players[name].pos1,rac.command_players[name].pos2,region_data_string)
-					minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< angelegt!")
-				end	
-			end	
-
-			-- lösche die gesetzten Positionen
-			rac.command_players[name] = nil
+			rac:msg_handling(66,func_name) -- [66] = "ERROR: func: command_set  - region_name zu kurz",
+			return 66
 		end
-		return 0
-	else
-		return 44 --	[44] = "ERROR: func: rac:command_set - Dir fehlt das Privileg 'region_set! ",
-	end
+		-- Prüfung, darf man hier setzen?
+		-- Darf der Spieler oder der Admin hier etwas setzen?
+		--			zone_table = {
+		--						player=false, 					-- false = admin, true = Player
+		--						plot_id = nil,					-- die ID des Plots, damit ein Player ihn ownen kann
+		--						plot = true, 						-- kann nur von admin gesetzt werden
+		--						city = true, 						-- kann nur von admin gesetzt werden
+		--						outback = true, 				-- kann nur von admin gesetzt werden 
+		err,zone_table = rac:can_player_set_region(rac.command_players[name].pos1,rac.command_players[name].pos2, name)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err: "..tostring(err)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.player: "..tostring(zone_table.player)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.plot_id: "..tostring(zone_table.plot_id)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.plot: "..tostring(zone_table.plot)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.city: "..tostring(zone_table.city)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.outback: "..tostring(zone_table.outback)	)
+
+					-- Fehlerbehandlung 
+		if type(err) ~= "boolean" then
+			return err
+		end
+		-- err kann nur noch true oder false sein!
+		if err == false then
+			return 44 --	[44] = "ERROR: func: rac:command_set - Dir fehlt das Privileg 'region_set! ",
+		end
+		-- err kann nur noch true sein!
+							
+		-- setzte die Werte, unbekannte Werte = default
+		local owner = name
+		-- region_name wurde übergeben"
+		local claimable = rac.region_attribute.claimable
+		local zone = "owned" -- wenn ein Spieler claimed dann ist es immer owned
+		local protected = true
+		local guests_string = rac.region_attribute.guests
+		local pvp = rac.region_attribute.pvp
+		local mvp = rac.region_attribute.mvp
+		local effect = rac.region_attribute.effect
+		local do_not_check_player = true -- der Spieler muss nicht überprüft werden
+
+
+		-- der Spieler darf die Region setzen
+		-- der Admin darf setzen
+		-- prüfe Spieler
+		if zone_table.player then
+			-- falls keine Plot_id übergeben wurde
+			if zone_table.plot_id == false then
+				-- erzeuge den datastring
+				claimable = false
+				-- rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
+				err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect)
+				-- wenn err > 0 return err  
+				if err > 0 then
+					minetest.log("action", "[" .. rac.modname .. "] can not create data!" ) 
+					return err -- rac:msg_handling(err) 
+				else
+					rac:set_region(rac.command_players[name].pos1,rac.command_players[name].pos2,region_data_string)
+					minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< angelegt!")
+				end
+			else -- if zone_table.plot_id == false then
+				-- überschreibe die Region mit der ID zone_table.plot_id an den Player
+				err = rac:command_change_owner(zone_table.plot_id.." "..name, name, true)
+				if err == 0 then
+					-- Player ist owner der Region
+					-- passe zone an 				zone = owned
+					err = rac:region_set_attribute(name, zone_table.plot_id, "zone", "owned")
+					if err == 0 then			
+						-- passe claimable an		claimable = false
+						err = rac:region_set_attribute(name, zone_table.plot_id, "claimable", false)
+						inetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< in Besitz genommen!")
+					end
+				end
+				return err								
+			end  -- if zone_table.plot_id == false then
+		else -- if zone_table.player then
+			-- es ist der admin
+			-- es könne folgende Fälle vorkommen:
+			-- outback,city,plot
+			if zone_table.outback then
+				zone = "outback"
+			elseif zone_table.city then
+				zone = "city"
+			else 
+				zone = "plot"
+			end
+			-- erzeuge den Datastring
+			claimable = false
+			-- rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
+			err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect)
+			if err > 0 then
+				minetest.log("action", "[" .. rac.modname .. "] can not create data!" ) 
+				return err -- rac:msg_handling(err) 
+			else
+				rac:set_region(rac.command_players[name].pos1,rac.command_players[name].pos2,region_data_string)
+				minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< angelegt!")
+			end
+			
+		end	 -- if zone_table.player then
+	end -- if can_modify.admin or can_modify.set then	
 end
 
 
@@ -464,15 +810,27 @@ end
 -- return 0 - no error
 function rac:command_remove(param, name)
 	-- check privileg
+	local func_version = "1.0.0"
+	local func_name = "rac:command_remove"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	
+	
+	--- ??? muss das?
 	local err = rac:has_region_mark(name)
 	if err ~= true then
-		rac:msg_handling( err, name ) --  message and error handling
+		rac:msg_handling( err,func_name, name ) --  message and error handling
 		return err
 	end
 	local id = tonumber(param:sub(8, -1))
+	local data
 	if id ~= nil then
 		if rac.rac_store:get_area(id) then
-			local data_table = rac:get_region_datatable(id)
+			err,data_table = rac:get_region_datatable(id)
+			if err ~= 0 then
+				rac:msg_handling(err,func_name)
+			end
 			if name == data_table.owner or minetest.check_player_privs(name, { region_admin = true }) then
 				-- make a backup of all region, use date
 				local backup = rac.backup_file_name..(os.date("%y%m%d_%H%M%S")..".dat" )
@@ -650,40 +1008,7 @@ function rac:command_ban(param, name)
 end
 
 
------------------------------------------
---
--- command change_owner id player
--- privileg: region_set
---
------------------------------------------
--- called: 'region change_owner {id} {playername}
--- input:
---		param 	(string)
---		name 	(string) 	of the player
--- msg/error handling:
--- return err if privileg is missing
--- return err = return from region_set_attribute
--- return 21 -- "Invalid usage.  Type \"/region help {command}\" for more information.",
-function rac:command_change_owner(param, name)
-	-- check privileg
-	local err = rac:has_region_set(name)
-	if err ~= true then
-		rac:msg_handling( err, name ) --  message and error handling
-		return err
-	end	
-	-- get the args after change_owner
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: must be a name of a player
-	local value = string.split(param:sub(13, -1), " ") --string.trim(param:sub(7, -1))
-	if value[1] == nil or value[2] == nil then
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help change_owner for more information.")
-		return 21 -- "Invalid usage.  Type \"/region help {command}\" for more information.",
-	else
-		err = rac:region_set_attribute(name, value[1], "owner", value[2]) 
-		--rac:msg_handling(err, name) --  message and error handling
-	end
-	return err
-end
+
 
 
 -----------------------------------------
@@ -769,72 +1094,6 @@ function rac:command_mvp(param, name)
 end
 
 
------------------------------------------
---
--- command show 
--- privileg: region_admin *or call by command_status
---
------------------------------------------
--- called: 'region show' <id1> <id2>  		<optional>
--- sends the player a list of regions
--- msg/error handling:
--- return 0 - no error
-function rac:command_show(header, name,list_start,list_end)
---	local region_values = {}
---	local pos1 = ""
---	local pos2 = ""
---	local data = ""
-	local chat_string = ""
-	local chat_string_start = "### List of Regions ###"
-	if header == false or header == "status" then
-		chat_string_start = ""
-	end
-	-- no privileg check: header == status then command_show is called by command_status 
-	-- else privileg region_admin 
-	local err = minetest.check_player_privs(name, { region_admin = true })
-	if header ~= "status" then
-		if not err then 
-			return 30 -- "msg: You don't have the privileg 'region_admin'! ",		
-		end	 
-	end
-
-	-- if list_start is not set
-	-- list_end is also not set
-	-- list all, from 0 to end (-1)
-	if list_start == nil then
-		list_start = 0
-		list_end = -1
-	elseif list_end == nil then
-		-- list_start is set an list_end not 
-		-- show regions with id = list_start
-		list_end = list_start
-	end
-
-	-- end < start then change start and end
-	if list_end < list_start and list_end ~= -1 then
-		local changer = list_end
-		list_end = list_start 
-		list_start = changer
-	end
-	
-	local stop_list = list_end
-	local counter = list_start
-
-	-- get all regions in AreaStore()
-	while rac.rac_store:get_area(counter) do
-		if counter <= stop_list or stop_list < 0 then
-			err = rac:get_data_string_by_id(counter)
-			if type(err) ~= "string" then
-				return err
-			else
-				chat_string = chat_string..err
-			end 
-		end -- if counter <= stop_list or stop_list < 0 then
-		counter = counter + 1
-	end --while rac.rac_store:get_area(counter) do
-	minetest.chat_send_player(name, chat_string_start..chat_string..".")
-	return 0
-end
 
 
 
@@ -889,189 +1148,12 @@ function rac:command_player_regions(header,param, name)
 	return 0
 end
 
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- Export the AreaStore() to a file 
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- Exportiere die Regionen in ein File.
--- Zusammen mit import könnte man somit auch Regionen übertragen oder manuell anpassen
--- Export the AreaStore table to a file
--- the export-file has this format, 3 lines: [min/pos1], [max/pos2], [data]
--- 		return {["y"] = -15, ["x"] = -5, ["z"] = 154}
--- 		return {["y"] = 25, ["x"] = 2, ["z"] = 160}
---		return {["owner"] = "adownad", ["region_name"] = "dinad Weide", ["claimable"] = false, ["zone"] = "owend", ["protected"] = false, ["guests"] = ",", 
---			["pvp"] = false, ["mvp"] = true, ["effect"] = "dot",  ["version"] = "1.0" }
---
--- input: 
---		export_file_name as string-file-path
---
--- msg/error handling:
--- return 0 - no error
--- return err from io.open
--- return 13 -- "ERROR: No Table returned func: rac:export(export_file_name)", 
-function rac:export(export_file_name)
-	local file_name = rac.worlddir .."/".. export_file_name --rac.export_file_name
-	local file, err
-
-	-- open/create a new file for the export
-	file, err = io.open(file_name, "w")
-	if err then	
-		--minetest.log("action", "[" .. rac.modname .. "] rac:file_exists(file_name) :"..tostring(rac:file_exists(file_name))) 
-		minetest.log("error", "[" .. rac.modname .. "] file, err = io.open(file_name, w) ERROR :"..err) 
-		return err
-	end
-	io.close(file)
-	
-	-- open file for append
-	file = io.open(file_name, "a")
-
-	--local region_values = {} 
-	local pos1 = ""
-	local pos2 = ""
-	local data = ""
-	local counter = 0
-	-- loop AreaStore and write for every region 3 lines [min/pos1], [max/pos2], [data]
-	while rac.rac_store:get_area(counter) do
-
-		--region_values = rac.rac_store:get_area(counter,true,true)
-		--pos1 = region_values.min
-		--pos2 = region_values.max
-		--data = region_values.data
-		pos1,pos2,data = rac:get_region_data_by_id(counter,true)
-		if type(pos1) ~= "table" then
-			return 54 -- "ERROR: No table returned func: rac:export(export_file_name)", 
-		end
-		counter = counter + 1
-		file:write(minetest.serialize(pos1).."\n")
-		file:write(minetest.serialize(pos2).."\n")
-		file:write(data.."\n")
-	end
-	file:close()
-	-- No Error
-	return 0
-end
-
---+++++++++++++++++++++++++++++++++++++++
---
--- Load the exported AreaStore() from file
---
---+++++++++++++++++++++++++++++++++++++++
--- input: import_file_name as string-file-path
--- msg/error handling:
--- return 0 - no error
--- return 6 -- "ERROR: File does not exist!  func: func: rac:import(import_file_name) - File: "..minetest.get_worldpath() .."/rac_store.dat (if not changed)",
-function rac:import(import_file_name)
-	local counter = 1
-	local pos1 
-	local pos2
-	local data
- 
-	-- does the file exist?
-	local file = rac.worlddir .."/"..import_file_name 
-	minetest.log("action", "[" .. rac.modname .. "] rrac:import(import_file_name) :"..tostring(import_file_name) )
-	if rac:file_exists(file) ~= true then
-		--minetest.log("action", "[" .. rac.modname .. "] rac:file_exists(file) :"..tostring(rac:file_exists(file))) 
-		minetest.log("error", "[" .. rac.modname .. "] rac:file_exists(file) :"..file.." does not exist!") 
-		return 6 -- "ERROR: File does not exist!  func: func: rac:import(import_file_name) - File: "..minetest.get_worldpath() .."/rac_store.dat (if not changed)",
-	end		
-	-- load every line of the file 
-	local lines = rac:lines_from(file)
-
-	-- loop all lines, step 3 
-	-- set pos1, pos2 and data and rac:set_region
-	while lines[counter] do
-		-- deserialize to become a vector
-		pos1 = minetest.deserialize(lines[counter])
-		pos2 = minetest.deserialize(lines[counter+1])
-		-- is an string
-	 	data = lines[counter+2]
-
-		rac:set_region(pos1,pos2,data)
-	 	counter = counter + 3
-	 	minetest.log("action", "[" .. rac.modname .. "] rac:import -pos1"..tostring(pos1).." pos2 "..tostring(pos2).." data "..data )
-		
-	end
-	-- Save AreaStore()
-	rac:save_regions_to_file()
-	-- No Error
-	return 0
-end
 
 
------------------------------------------
---
--- command border
--- privileg: interact 	for own region
--- privileg: region_admin	for other, by name or ID
---
------------------------------------------
--- called: 'region border'
--- 		'region {name}' if you are region_admin
---		'region {id}'	if you are region_admin
--- shows a box over the region
--- input:
---		param 	(string)
---		name 	(string) 	of the player
--- msg/error handling: 
--- return 20 --"msg: You don't have the privileg 'interact'! ",
--- return 0	-- no error
-function rac:command_border(param, name)
-	-- check privs
-	if not minetest.check_player_privs(name, { interact = true }) then 
-		return 20 --"msg: You don't have the privileg 'interact'! ",		
-	end
-	local is_region_admin = minetest.check_player_privs(name, { region_admin = true })
-	-- get values of param
-	local value = string.split(param:sub(7, -1), " ") 
-	-- region ID = nil -> no region
-	local region_id  = nil	
-	local pos1, pos2, data 
-	local center
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border value[1] = {"..tostring(value[1]).."}" )  
-	--local player = minetest.get_player_by_name(owner)
-	local player = minetest.env:get_player_by_name(name)
-	local pos = player:getpos()		
-	local owner = name
-	if is_region_admin and value[1] ~= nil then
-		if minetest.player_exists(value[1]) == true then
-			owner = value[1]
-		end
-		-- maybe a region ID is committed
-		if rac.rac_store:get_area(tonumber(value[1])) then 
-			region_id = tonumber(value[1])
-		end
-	end 
-	
-	-- two cases:
-	-- case 1 region_id == nil 
-	-- 		get pos1, pos2, center by name and pos
-	if region_id == nil then 
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border owner = "..owner )  
-		pos1, pos2, center = rac:get_region_center_by_name_and_pos(owner, pos)
-	else
-	-- case2 - region id is set
-		pos1,pos2,data = rac:get_region_data_by_id(region_id)	
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border region_id = "..tostring(region_id) )  
-		center = rac:get_center_of_box(pos1, pos2)
-	end
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border pos1 = "..minetest.serialize(pos1) ) 
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border pos2 = "..minetest.serialize(pos2) ) 
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border center = "..tostring(center) ) 
- 
-	if type(center) == "table" then 
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border pos = "..minetest.serialize(pos) )  
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border center = "..minetest.serialize(center) )  
-		center.y = (center.y-1)
-		local box = minetest.env:add_entity(center, "rac:showarea")	
-		box:set_properties({
-				visual_size={x=math.abs(pos1.x - pos2.x), y=math.abs(pos1.y - pos2.y), z=math.abs(pos1.z - pos2.z)},
-				collisionbox = {pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z},
-			})
-	else 
-		minetest.chat_send_player(name, "No region found!")
-	end
-end
+
+
+
+
 
 -----------------------------------------
 --

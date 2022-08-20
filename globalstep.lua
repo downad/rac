@@ -45,10 +45,46 @@ License:
 local timer = 0
 minetest.register_globalstep(function(dtime)
 	local func_version = "1.0.1" -- angepasstes get_region_at_pos err == nil für keine ID bei Position pos gefunden
+	local func_name = "rac:register_globalstep"
 	if rac.show_func_version and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] register_globalstep - Version: "..tostring(func_version)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0
+	
+	-- der Timer läuft
+	rac.timer = rac.timer + dtime
+	
+	
+	--[[
+	-- der Timer für die rac:mark die Marker
+ 	rac.marker_timer = rac.marker_timer + dtime
+
+	
+	
+	-- test rac.mark Time to Live
+	-- on_place füllt einen Stack 
+	-- durchlaufe diesen Stack und zerstöre die rac.mark nach default Time 
+	-- rac:delte_mark_after_ttl
+	if rac.marker_timer > rac.marker_verify_timer then
+		for i,v in ipairs(rac.list_of_marker) do
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - list_of_marker: i: "..tostring(i).." pos: "..tostring(rac:table_to_string(v))	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - list_of_marker: get_node at pos: "..tostring(minetest.get_node(v)) )
+			local my_node = minetest.get_node(v)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - list_of_marker: get_node.name at pos: "..tostring(my_node.name) )
+			local meta = minetest.get_meta( v );
+			local my_pos = v	
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - list_of_marker: get_node meta:get_string'time': "..tostring(meta:get_string( 'time') ) )  
+			local this_time = 	 os.time() - meta:get_string( 'time')				
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - list_of_marker:   os.time(): "..tostring( os.time() ) )  
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - list_of_marker: node this_time: "..tostring(this_time ) )  
+			if this_time > 30 then
+				minetest.set_node(my_pos, {name="air"})
+				rac.list_of_marker = rac:remove_value_from_table(v, rac.list_of_marker)
+			end
+		end
+		rac.marker_timer = 0
+	end	
+	]]--
 	
 	local name 	-- Name des Spielers
 	local pos 	-- pos des Spielers
@@ -66,8 +102,6 @@ minetest.register_globalstep(function(dtime)
 	local effect1, effect2
 	local protected_string, enable_pvp
 
-	-- der Timer läuft
-	rac.timer = rac.timer + dtime
 
 	-- das ist der String für das hud_update
 	local hud_string
@@ -90,7 +124,7 @@ minetest.register_globalstep(function(dtime)
 		if err == nil then
 			err = 0 -- Alles ist gut, Globlastep geht auf region_id == nil
 		elseif err >  0 then
-			rac:msg_handling(err)
+			rac:msg_handling(err,func_name)
 		end	
 		
 		if region_id == nil then
@@ -154,7 +188,7 @@ minetest.register_globalstep(function(dtime)
 				end
 			else
 				-- err hat einen Fehler gemeldet
-				rac:msg_handling(err)
+			rac:msg_handling(err,func_name)
 			end
 			
 			-- teste ob der Effect ein erlaubter Effekt ist
@@ -175,7 +209,7 @@ minetest.register_globalstep(function(dtime)
 
 		else -- mehr als 2 Regionen!
 			-- [2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
-			rac:msg_handling(2, name)
+			rac:msg_handling(2, func_name, name)
 		end -- #region_id > 0  then
 		
 

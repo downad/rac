@@ -48,30 +48,31 @@ License:
 -- msg/error handling: no 
 function rac:do_effect_to_player(player,effect)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:do_effect_to_player - Version: "..tostring(func_version)	)
+	local func_name = "rac:do_effect_to_player"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0
 	
 	-- abhängig von Effekt wird die passende Funktion aufgerufen
 	-- und der Fehler oder bei err = 0 nicht ausgegeben
 	if effect == "hot" then
-		rac:msg_handling( rac:do_effect_hot(player) )
+		rac:msg_handling( rac:do_effect_hot(player),func_name )
 	end
 	if effect == "bot" then
-		rac:msg_handling( rac:do_effect_bot(player) )
+		rac:msg_handling( rac:do_effect_bot(player),func_name )
 	end
 	if effect == "holy" then
-		rac:msg_handling( rac:do_effect_holy(player) )
+		rac:msg_handling( rac:do_effect_holy(player),func_name )
 	end
 	if effect == "dot" then
-		rac:msg_handling( rac:do_effect_dot(player) )
+		rac:msg_handling( rac:do_effect_dot(player),func_name )
 	end
 	if effect == "choke" then
-		rac:msg_handling( rac:do_effect_choke(player) )
+		rac:msg_handling( rac:do_effect_choke(player),func_name )
 	end
 	if effect == "evil" then
-		rac:msg_handling( rac:do_effect_evil(player) )
+		rac:msg_handling( rac:do_effect_evil(player),func_name )
 	end
 end
 
@@ -93,13 +94,14 @@ end
 -- msg/error handling: no
 function rac:do_effect_hot(player)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 8 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
+	local func_name = "rac:do_effect_hot"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0
 	if player:get_hp() < 20 then
 		player:set_hp(math.max(player:get_hp() + rac.region_effect.hot, 0))
-		minetest.chat_send_player(player:get_player_name(), "The region regenerate you with "..rac.effect.hot.." life!")
+		minetest.chat_send_player(player:get_player_name(), "The region regenerate you with "..rac.region_effect.hot.." life!")
 	end
 	return err
 end

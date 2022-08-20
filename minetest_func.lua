@@ -45,8 +45,10 @@ License:
 minetest.register_on_protection_violation(function(pos, name)
 	-- rac:can_interact(pos, name)  liefert true/false und den Ower_string
 	local can_interact, owner_string = rac:can_interact(pos, name) 
-	if not rac:can_interact(pos, name) then
+--	if not rac:can_interact(pos, name) then
+	if not can_interact then
 		local pos_string = minetest.pos_to_string(pos)
+		minetest.log("action", "[" .. rac.modname .. "] register_on_protection_violation - can_interact: "..tostring(can_interact)	)
 		minetest.chat_send_player(name, pos_string.." is protected by "..owner_string)
 	end
 end)
@@ -61,6 +63,7 @@ minetest.register_on_protection_violation(function(pos, name)
 	local player = minetest.get_player_by_name(name)
 	if not player then return end
 	if rac.do_damage_for_violation then 
+		minetest.log("action", "[" .. rac.modname .. "] register_on_protection_violation - rac.do_damage_for_violation: "..tostring(rac.do_damage_for_violation)	)
 		player:set_hp(math.max(player:get_hp() - rac.damage_on_protection_violation, 0))
 		minetest.chat_send_player(name, "The protection deals you " ..rac.damage_on_protection_violation.." damage.")
 	else
@@ -114,10 +117,13 @@ end
 --	owner				der Beitzer der Region / bei wilderness rac.wilderness.owner
 --
 -- msg/errorhandling: no
+-- 			[62] = "ERROR: func: can_interact  - 2 Regionen gefunden, sei dürfen so ab er nicht liegen"
+--
 function rac:can_interact(pos, name)
 	local func_version = "1.0.1" -- angepasstes get_region_at_pos err == nil für keine ID bei Position pos gefunden
-	if rac.show_func_version and rac.debug_level == 10 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - Version: "..tostring(func_version)	)
+	local func_name = "rac:can_interact"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
 	-- niemand darf was machen
@@ -129,6 +135,8 @@ function rac:can_interact(pos, name)
 	
 	-- einige benötigte Variablen
 	local data_table = {} -- der data_string einer Region
+	local data_table2 = {} -- der data_string einer Region
+	local data_table3 = {} -- der data_string einer Region
 	local owner = ""			-- weil man gegen den owner prüft
 	local guests = {}			-- weil man gegen die Gäste prüft
 	local is_protected 		-- wird mit dem Region_Attribut protected gefüllt
@@ -140,37 +148,115 @@ function rac:can_interact(pos, name)
 		
 	-- the region is not protected
 	local protected = false -- wenn eine Region geschützt ist zählt das für alle
-								
+	
+	local this_zone_counts = nil -- diese Zone gilt!							
 
 	-- hole eine eine Tabelle mit allen region ID
 	-- ist der wert nil dann gibt es keine ID
 	local err
 	local region_id 
 	err,region_id = rac:get_region_at_pos(pos)
+
 	-- keine Region gefunden
 	if err == nil then
 		err = 0 -- Alles ist gut, Globlastep geht auf region_id == nil
 	elseif err >  0 then
-		rac:msg_handling(err)
+		rac:msg_handling(err,func_name)
 	end	
 
-		
 	if region_id == nil then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - if region_id == nil "	)
 		-- es gibt keine Region, nutze den wilderness Werte protected
 		-- was muss gepüft werden für die Interaktion
 		-- protected = true -> can_interact = false
 		if rac.wilderness.protected then
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - return true - if rac.wilderness.protected "..tostring(rac.wilderness.protected)	)
 			return false, rac.wilderness.owner
 		else
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - retrun false - if rac.wilderness.protected "..tostring(rac.wilderness.protected)	)
 			return true, rac.wilderness,owner
 		end
-	elseif #region_id == 1 then
-		-- einfacher Fall es gibt nur eine Region
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1: region_id = "..tostring(rac:table_to_string(region_id))	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1: region_id[1] = "..tostring(region_id[1])	)
+	elseif #region_id == 2 then
+		-- es sind 2 Regionen an dieser Stelle
+		-- is_protected gilt in der Reihenfolge: outback < city < plot < owned
+		-- city 		& 	 	plot oder owned
+		-- outback	&			plot oder owned
+		-- outback	&			city
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 2: region_id = "..tostring(rac:table_to_string(region_id))	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif region_id[1] = "..tostring(region_id[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif region_id[2] = "..tostring(region_id[2])	)
+		
 		err,data_table = rac:get_region_datatable(region_id[1])
+		err,data_table2 = rac:get_region_datatable(region_id[2])
+		
+		local zone1 = data_table.zone
+		local zone2 = data_table2.zone
+
+		if ( zone1 == "owned" or zone1 == "plot" ) and ( zone2 == "city" or zone2 == "outback" )then
+			this_zone_counts = 1
+		elseif ( zone2 == "owned" or zone2 == "plot" ) and ( zone1 == "city" or zone1 == "outback" )then
+			this_zone_counts = 2
+		else
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif zone1..2 - hier darf man nicht sein! "	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - zone 1 = "..tostring(zone1) )
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - zone 2 = "..tostring(zone2) )
+			-- produziere absturz
+			rac:msg_handling(62,func_name)
+			return false, data_table.owner..", "..data_table2.owner
+		end
+		-- das Problem wurde auf die relevante Zone beschänkt und kann wie #region_id = 1 abgehandelt werden
+		
+	elseif #region_id == 3 then
+	-- es sind 3 Regionen an dieser Stelle
+	-- is_protected gilt in der Reihenfolge: outback < city < plot < owned
+	-- outback 		& city 	 & 	plot oder owned
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 3: region_id = "..tostring(rac:table_to_string(region_id))	)
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif region_id[1] = "..tostring(region_id[1])	)
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif region_id[2] = "..tostring(region_id[2])	)
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif region_id[3] = "..tostring(region_id[3])	)
+	
+	err,data_table = rac:get_region_datatable(region_id[1])
+	err,data_table2 = rac:get_region_datatable(region_id[2])
+	err,data_table3 = rac:get_region_datatable(region_id[3])
+	
+	local zone1 = data_table.zone
+	local zone2 = data_table2.zone
+	local zone3 = data_table3.zone
+	
+	if ( zone1 == "owned" or zone1 == "plot" ) and ( zone2 == "city" or zone2 == "outback" ) and ( zone3 == "city" or zone2 == "outback" ) then
+		this_zone_counts = 1
+	elseif ( zone2 == "owned" or zone2 == "plot" ) and ( zone1 == "city" or zone1 == "outback" ) and ( zone3 == "city" or zone2 == "outback" ) then
+		this_zone_counts = 2
+	elseif ( zone3 == "owned" or zone3 == "plot" ) and ( zone2 == "city" or zone2 == "outback" ) and ( zone1 == "city" or zone1 == "outback" ) then
+		this_zone_counts = 3
+	else
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif zone1..2 - hier darf man nicht sein! "	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - zone 1 = "..tostring(zone1) )
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - zone 2 = "..tostring(zone2) )
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - zone 3 = "..tostring(zone3) )
+		-- produziere absturz
+		rac:msg_handling(62,func_name)
+		return false, data_table.owner..", "..data_table2.owner
+	end
+	-- das Problem wurde auf die relevante Zone beschänkt und kann wie #region_id = 1 abgehandelt werden
+	
+	elseif #region_id > 3 then
+		rac:msg_handling(63,func_name)
+		return false, rac.wilderness.owner
+	end	 -- if region_id == nil then
+
+	if #region_id == 1 or this_zone_counts ~= nil then
+		-- einfacher Fall es gibt nur eine Region
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1: region_id = "..tostring(rac:table_to_string(region_id)) )
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact -  or this_zone_counts ~= nil "..tostring(this_zone_counts)	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_interact - elseif #region_id == 1: region_id[1] = "..tostring(region_id[1])	)
+		if this_zone_counts == nil then
+			err,data_table = rac:get_region_datatable(region_id[1])
+		else
+			err,data_table = rac:get_region_datatable(region_id[this_zone_counts])
+		end
 		if err >  0 then
-			rac:msg_handling(err)
+			rac:msg_handling(err,func_name)
 		end	
 		owner = data_table.owner
 		guests = data_table.guests --<- this is a string!
@@ -189,96 +275,7 @@ function rac:can_interact(pos, name)
 		else
 			return true, owner
 		end	
-	elseif #region_id == 2 then
-		-- es sind mehr als 1 Region an dieser Stelle
-		-- es dürfen nur 2 Regionen übereinander liegen
-		-- zone1 = city
-		-- zone2 = plot
-		data_table = rac:get_region_datatable(region_id[1])
-		local data_table2 = rac:get_region_datatable(region_id[2])
-		
-		local zone1 = data_table.zone
-		local zone2 = data_table2.zone
-		local do_check = false
-		local city_protected, plot_protected
-		local plot_owner, plot_guest
-		
-		
-		-- city = protected, plot protected 		-> owner, guest of plot can interact
-				-- darf auch der city Owner? 				-> Ja, denn er ist Admin!
-				-- dürfen auch Gäste in der STadt? 	-> Nein!		 
-		-- city = protected, plot unprotected 	-> jeder darf in plot		 
-		-- city = unprotected, plot = protected -> owner, guest of plot can interact
-		-- city und plot unprotected 						-> jeder darf		 
-		if zone1 == "city" then
-			if zone2 == "plot" then
-				do_check = true
-				city_protected = data_table.protected
-				plot_protected = data_table2.protected
-				city_owner = data_table.owner 	--check if region_admin				
-				plot_owner = data_table2.owner
-				plot_guest = data_table2.guests
-			else
-			-- error Zone1 ist city aber zone 2 kein plot
-			-- Poste ERROR
-			end			
-		elseif zone1 == "plot" then
-			if zone2 == "city" then
-				do_check = true
-				city_protected = data_table2.protected
-				plot_protected = data_table.protected
-				city_owner = data_table2.owner 	--check if region_admin				
-				plot_owner = data_table.owner
-				plot_guest = data_table.guests
-			else
-			-- error Zone1 ist plot aber zone 2 kein city
-			-- Poste ERROR
-			end
-		else
-			-- error Zone1 ist weder city noch plot
-			-- Poste ERROR
-		end
-	else
-		-- mehr als 2 REgione überlagern sich 
-		-- Poste ERROR
-	end
-	-- überprüfe die Fälle
-	-- city = protected, plot protected 		-> owner, guest of plot can interact
-		-- darf auch der city Owner? 				-> Ja, denn er ist Admin!
-		-- dürfen auch Gäste in der STadt? 	-> Nein!		 
-	-- city = protected, plot unprotected 	-> jeder darf in plot		 
-	-- city = unprotected, plot = protected -> owner, guest of plot can interact
-		-- darf auch der city Owner? 				-> Ja, denn er ist Admin!
-	-- city und plot unprotected 						-> jeder darf		
-	if do_check then
-		if city_protected then
-			if plot_protected then
-				if plot_owner == name or city_owner == name then
-					return true, plot_owner
-				end
-				if rac:player_is_guest(name, plot_guests) then 
-					return true, plot_owner
-				end	
-			else
-				return true, plot_owner
-			end
-		else
-			if plot_protected then
-				if plot_owner == name or city_owner == name then
-					return true, plot_owner
-				end
-				if rac:player_is_guest(name, plot_guests) then 
-					return true, plot_owner
-				end	
-			else
-				return true, plot_owner
-			end
-		end
-	else
-		return false, plot_owner
-	end		
-	
-	
+	end -- if #region_id == 1 or this_zone_counts ~= nil then
 	
 end
 
