@@ -23,7 +23,6 @@ Region Areas and City
 	 			evil: dot und choke	
 	
 	
-
 Copyright (c) 2022
 	ralf Weinert <downad@freenet.de>
 Source Code: 	
@@ -46,7 +45,7 @@ rac.razguide = {
 		Tab_2="Admin",
 		Tab_3="player-Handbuch",
 		Tab_4="Admin-Handbuch",
-		Tab_5="??",
+		Tab_5="aktuelles Gebiet",
 		-- Tab_6 ist das X zum Schließen der Form
 		-- zusätzlich zu den Tabs oben am Buch gibt es buttons
 		Button_7 = "Schutz ausschalten",	-- protection ausschalten
@@ -62,6 +61,10 @@ rac.razguide = {
 		Button_17 = "delete Region",	 		-- Gebiet löschen 
 		Button_18 = "add", 							 	-- Effekt hinzufügen
 		Button_19 = "delete",		 					-- Effekt löschen 
+		Button_20 = "claimable on",		 		-- claimable on
+		Button_21 = "claimable off",			-- claimable off
+		Button_22 = "change zone",		 		-- Change Zone
+		 
 		
 	
 		
@@ -101,11 +104,12 @@ rac.razguide = {
 -- 	über rac.player_guide[player_name].err kann ein austausch von Fehlern / nachrichten zwischen der Form und dieser Funktion stattfinden
 function rac:guide(player,do_this)
 	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:guide - Version: "..tostring(func_version)	)
+	local func_name = "rac:guide"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:guide - do_this: "..tostring(do_this)	)
-		
 	end
+	
 	local err  							-- Fehler
 	local info_text = ""		-- Error/Infoanzeige in der Form
 	-- Sting für die Texte, die angezeigt werden 
@@ -158,7 +162,7 @@ function rac:guide(player,do_this)
 	if rac.player_guide[player_name] ~= nil then
 		-- test ob eine Fehlermeldung da war
 		err = rac.player_guide[player_name].err
---		minetest.log("action", "[" .. rac.modname .. "] rac:guide - rac.player_guide[player_name].err > 0 - err: "..tostring(err)	)
+		--minetest.log("action", "[" .. rac.modname .. "] rac:guide - rac.player_guide[player_name].err > 0 - err: "..tostring(err)	)
 		-- es ist kein Text vorhanden
 		if err == nil then
 			info_text = ""
@@ -171,21 +175,19 @@ function rac:guide(player,do_this)
 		end
 	end	
 	
+	minetest.log("action", "[" .. rac.modname .. "] rac:guide - info_text: "..tostring(info_text)	)
+	
 	-- resette den rac.player_guide
 	rac.player_guide[player_name] = {}
 	
 	-- hole die Region zu der aktuellen Position
 	local err,region_id = rac:get_region_at_pos(pos)
-		rac:msg_handling(err)	
+		rac:msg_handling(err,func_name)	
 	if err ~= nil then	
-			minetest.log("action", "[" .. rac.modname .. "] rac:guide - error err: "..tostring(err)	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:guide - error type(err): "..tostring(type(err))	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:guide - error type(region_id): "..tostring(type(region_id))	)
-	
-		if rac.debug and rac.debug_level > 0 then
-			minetest.log("action", "[" .. rac.modname .. "] rac:guide - err: "..tostring(err)	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:guide - region_id: "..tostring(region_id[1])	)
-		end
+			minetest.log("action", "[" .. rac.modname .. "] rac:guide - rac:get_region_at_pos(pos) err: "..tostring(err)	)
+			--minetest.log("action", "[" .. rac.modname .. "] rac:guide - error type(err): "..tostring(type(err))	)
+			--minetest.log("action", "[" .. rac.modname .. "] rac:guide - error type(region_id): "..tostring(type(region_id))	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:guide - region_id[1]: "..tostring(region_id[1])	)
 	else
 		minetest.log("action", "[" .. rac.modname .. "] rac:guide - keine region_id: "..tostring(err)	)
 	end
@@ -201,7 +203,7 @@ function rac:guide(player,do_this)
 	
 
 	-- Tab_1 - Verwalten des Gebiet (Owner und/oder privs: effect,mvp,pvp,guest) 
-	if do_this==1 then --text=rac.razguide["Tab_Text_1"] end
+	if do_this==1 or do_this == 2 then --text=rac.razguide["Tab_Text_1"] end
 
 		-- es gibt eine Region!
 		if region_id ~= nil then
@@ -211,36 +213,53 @@ function rac:guide(player,do_this)
 			
 			-- hole die RegionData und mache das Errorhandling
 			err, region_data = rac:get_region_datatable(region_id[1]) 
-			rac:msg_handling(err)
+			rac:msg_handling(err,func_name)
 				
 			-- allgemeine Infos	(unabhängig von Rechten oder Owner-schaft)
 			text_allgemein = "Du bist auf dem Gebiet "..region_data.region_name.." (ID: "..region_id[1]..") Dieses Gebiet gehört: "..region_data.owner
 			text_allgemein = text_allgemein.."\nDas ist bisher eingestellt:"
-			text = text.."\n Name des Gebietes: ".. region_data.region_name
-			text = text.."\n Gäste: ".. region_data.guests
-			text = text.."\n Schutz: "
-			if region_data.protected then 
-				text = text.." geschützt"
-			else
-				text = text.." kein Schutz"
-			end
+
 			-- ende allgemeine Infos
 			
-			
-			-- prüfe Owner, der darf maches immer.
-			if region_data.owner == player_name then
-				--err, region_data = rac:get_region_datatable(region_id[1]) 
-				can_modify.is_owner = true
-				-- owner darf immer
-				can_modify.protected = true
-				can_modify.change_owner = true
-				can_modify.delete_region = true
-				can_modify.rename_region = true
-				text_allgemein = text_allgemein.."\n"..info_text
+			if do_this == 1 then
+				text_allgemein = text_allgemein.."\n Claimable: "
+				if region_data.claimable then 
+					text_allgemein = text_allgemein.." ja"
+				else
+					text_allgemein = text_allgemein.." nein"
+				end
+				
+				-- prüfe Owner, der darf maches immer.
+				if region_data.owner == player_name then
+					--err, region_data = rac:get_region_datatable(region_id[1]) 
+					can_modify.is_owner = true
+					-- owner darf immer
+					can_modify.protected = true
+					can_modify.change_owner = true
+					can_modify.delete_region = true
+					can_modify.rename_region = true
+					text_allgemein = text_allgemein.."\n"..info_text
+				else
+					text_allgemein = text_allgemein..text.. "\nDa du nicht der Besitzer bist, kannst du es nicht verwalten!"
+				end
 			else
-				text_allgemein = text_allgemein..text.. "\nDa du nicht der Besitzer bist, kannst du es nicht verwalten!"
+				text = text.."\n Name des Gebietes: ".. region_data.region_name
+				text = text.."\n Gäste: ".. region_data.guests
+				text = text.."\n Schutz: "
+				if region_data.protected then 
+					text = text.." geschützt"
+				else
+					text = text.." kein Schutz"
+				end
+				text = text.."\n Claimable: "
+				if region_data.claimable then 
+					text = text.." ja"
+				else
+					text = text.." nein"
+				end
+				text = text.."\n zone: "..region_data.zone 
 			end
-					
+			text_allgemein = text_allgemein..text
 		else -- region_id == nil
 			text_allgemein = rac.wilderness.text_wilderness.." Hier kann man nichts sehen oder verwalten."
 		end -- region_id == nil
@@ -249,13 +268,13 @@ function rac:guide(player,do_this)
 	
 	-- diese Tabs verändern den Text der Form, das muss angepasst werden
 	-- text = text_allgemein 
-	if do_this==2 then text_allgemein=rac.razguide["Tab_Text_2"] end
+	--if do_this==2 then text_allgemein=rac.razguide["Tab_Text_2"] end
 	if do_this==3 then text_allgemein=rac.razguide["Tab_Text_3"] end
 	if do_this==4 then text_allgemein=rac.razguide["Tab_Text_4"] end
 	if do_this==5 then text_allgemein=rac.razguide["Tab_Text_5"] end
 	
 
-	
+	minetest.log("action", "[" .. rac.modname .. "] rac:guide -vor Form - text_allgemein "..tostring(text_allgemein)	)
 	-- bau die Ausgabe zusammen
 	-- Tab_1 .. Tab_5 sind die Reiter oben
 	-- darunter steht dann immer ein Text in einem "label"
@@ -269,6 +288,10 @@ function rac:guide(player,do_this)
 		"button_exit[9,0; 1,1;tab6;X]" ..
 		"label[0,1;"..text_allgemein .."]"
 		
+	
+	
+	
+	
 			
 	-- ohne priv admin kann man nur eigenen Gebiete anpassen
 	-- das folgende gilt nur für den Tab 1 = do_this == 1!!!
@@ -349,7 +372,29 @@ function rac:guide(player,do_this)
 			
 			
 		end -- if can_modify then
+		if can_modify.admin and do_this == 2  then
+			-- der Adminbereich
+			-- speichere die ID in rac.player_guide
+			rac.player_guide[player_name]["region_id"]=region_id
+			rac.player_guide[player_name]["guests"] = {}
+			
+			-- claimable
+			-- Text und ein langer Button
+			text_attribute = "Das Gebiet "
+			if region_data.claimable then
+				form = form.."label[0,"..line.l7..";"..text_attribute.." ist claimable.".."]".."button["..line.bcol1..","..line.b7..";"..line.bl1..","..line.bh..";tab20;" .. rac.razguide["Button_20"] .. "]" 
+			else
+					form = form.."label[0,"..line.l7..";"..text_attribute.." kann nicht geclaimed werden".."]".."button["..line.bcol1..","..line.b7..";"..line.bl1..","..line.bh..";tab21;" .. rac.razguide["Button_21"] .. "]" 
+			end
+			-- zone
+			-- inputfield
+			text_attribute = "Eingestellte Zone: "
+				form = form.."field[0.3,"..line.l8..";"..line.lin..","..line.bh..";zone;"..text_attribute..region_data.zone..";]".."button["..line.bcol1..","..line.b8..";"..line.bl1..","..line.bh..";tab22;".. rac.razguide["Button_22"] .. "]"
+
+		end
 	end -- if region_id ~= 0 then
+	
+	
 	minetest.show_formspec(player_name, "rac:racguide",form)
 	return 0 --"done"
 end
@@ -363,24 +408,12 @@ end
 minetest.register_on_player_receive_fields(function(player, form, pressed)
 	-- wenn es nicht von razguide kommt return
 	if form ~="rac:racguide" then 
-		-- Ok es kommt die Anfrage für ein set_region
-		if form =="rac:markerform" then
-	 		-- in pressed.region_name sollte der Regionname stehen
-	 		-- in 
-	 		-- 	rac.command_players[name].marker.pos1
-	 		-- 	rac.command_players[name].marker.pos2
-	 		-- die position
-	 		--  
-			if rac.debug and rac.debug_level > 7 then
-				minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields [markerform] " )
-				minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields [markerform] - pressed.region_name: "..tostring(pressed.region_name) )
-				minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields [markerform] - rac.command_players[name].marker.pos1: "..tostring(minetest.serialize(rac.command_players[name].marker.pos1)	) )
-				minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields [markerform] - rac.command_players[name].marker.pos2: "..tostring(minetest.serialize(rac.command_players[name].marker.pos2)	) )
-			end
-		else
-			return
-		end
-	-- evtl. else wenn noch weiter Formen hinzukommen
+		return 
+	end
+		local func_version = "1.0.0"
+	local func_name = "rac:register_on_player_receive_fields"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	-- prüfen ob sicher in razguide
 	if form=="rac:racguide" then
@@ -388,15 +421,20 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
 		local context = rac.player_guide[player:get_player_name()]
 		local err -- Variable für das Errorhandling
 				
-		if rac.debug and rac.debug_level > 7 then
+		if rac.debug and rac.debug_level > 0 then
 			minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields - err: "..tostring(err) )
-			minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields - context.region_id: "..tostring(context.region_id[1]	) )
+			if context.region_id ~= nil then
+				minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields - context.region_id: "..tostring(context.region_id[1]	) )
+			end
 			minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields - minetest.serialize(pressed): "..tostring(minetest.serialize(pressed)	) )
 		end
 			
 		-- hier werden die Tabs gesteuert	
 		if pressed.tab1 then rac:guide(player,1) end
-		if pressed.tab2 then rac:guide(player,2) end
+		if pressed.tab2 then 
+			minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields - in tab2 admin" )
+			rac:guide(player,2) 
+		end
 		if pressed.tab3 then rac:guide(player,3) end
 		if pressed.tab4 then rac:guide(player,4) end
 		if pressed.tab5 then rac:guide(player,5) end
@@ -408,6 +446,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab7" )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "protected", false, nil) 
 			context.err = err
+			rac:guide(player,1)
 		end -- protection ausschalten
 
 		-- setze protected = true
@@ -415,6 +454,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab8" )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "protected", true, nil) 
 			context.err = err
+			rac:guide(player,1)
 	 	end -- protection einschalten
 
 
@@ -427,6 +467,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.guest = "..tostring(pressed.guest) )
   		err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "guests", pressed.guest, true) 
 			context.err = err
+			rac:guide(player,1)
 		end -- setze Gast
 
 		-- tab 9/tab10 ist für Gast zuständig, in Verbindung mit dem String aus
@@ -438,6 +479,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.guest = "..tostring(pressed.guest) )
 	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "guests", pressed.guest, false) 
 			context.err = err
+			rac:guide(player,1)
 		end -- lösche Gast
 
 		-- Region umbenennen -  pressed.tab11	
@@ -452,6 +494,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
 
 	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "region_name", pressed.rename) 
 			context.err = err
+			rac:guide(player,1)
 		end
 		
 		
@@ -461,6 +504,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab12" )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "pvp", false, nil) 
 			context.err = err
+			rac:guide(player,1)
 		end -- pvp ausschalten
 
 		-- tab12 und tab13 sind PvP an / aus
@@ -469,6 +513,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab13" )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "pvp", true, nil) 
 			context.err = err
+			rac:guide(player,1)
 	 	end -- pvp einschalten
 		
 		-- tab14 und tab15 sind MvP an / aus
@@ -477,6 +522,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab14" )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "mvp", false, nil) 
 			context.err = err
+			rac:guide(player,1)
 		end -- mvp ausschalten
 
 		-- tab14 und tab15 sind MvP an / aus
@@ -485,6 +531,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab15" )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "mvp", true, nil) 
 			context.err = err
+			rac:guide(player,1)
 	 	end -- mvp einschalten		
 		
 		-- Besitz übertragen =  pressed.tab16
@@ -494,6 +541,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.change_owner) )
 	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "owner", pressed.change_owner) 
 			context.err = err
+			rac:guide(player,1)
 		end
 
 
@@ -516,6 +564,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
 --	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "effect", pressed.change_owner) 
 				context.err = 49 --		[49] = "info: Falsche Region_ID eingegeben!  ",
 			end
+			rac:guide(player,1)
 		end
 
 		-- tab18 und tab19 für Effekte setzen / löschen
@@ -525,6 +574,7 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
 	 		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.effect: "..tostring(pressed.effect	) )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "effect", pressed.effect, true)
 			context.err = err 
+			rac:guide(player,1)
 		end -- setze Effekt
 
 
@@ -535,18 +585,46 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
 	 		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.effect: "..tostring(pressed.effect	) )
 			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "effect", pressed.effect, false) 
 			context.err = err
+			rac:guide(player,1)
 	 	end -- lösche Effekt
+	 	
+	 	-- tab20 und tab21 für Claimable / admin do_this = 2
+	 	-- setzte claimable = false
+		if pressed.tab20 then 
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab20" )
+			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "claimable", false, nil) 
+			context.err = err
+			rac:guide(player,2)
+		end	 	
+	 	-- tab20 und tab21 für Claimable / admin do_this = 2
+	 	-- setzte claimable = true
+		if pressed.tab21 then 
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab20" )
+			err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "claimable", true, nil) 
+			context.err = err
+			rac:guide(player,2)
+		end	 	
+	 
+ 		-- tab22 set zone / admin do_this = 2
+		if pressed.tab22 then
+			-- pressed.change_owner beinhaltet den Name des Gast
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab16" )
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.zone) )
+	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[1]	, "zone", pressed.zone) 
+			context.err = err
+			rac:guide(player,2)
+		end	
 
 		if err ~= nil then
 			if err >  0 then
 				minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: error: "..tostring(err) )
-				rac:msg_handling(err)
+				rac:msg_handling(err, func_name)
 			end
 		end				
 		-- pressed.tab6 ist das X für schließen 
-		if not pressed.tab6 then
-			rac:guide(player,1)
-		end
+--		if not pressed.tab6 then
+--			rac:guide(player,5)
+--		end
 	end --if form=="razguide" then
 
 
@@ -572,5 +650,4 @@ minetest.register_craft({output = "rac:guidebook",recipe = {{"default:stick","de
 minetest.register_on_newplayer(function(player)
 player:get_inventory():add_item("main", "rac:guidebook")
 end)
-
 

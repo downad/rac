@@ -47,17 +47,21 @@ minetest.register_node("rac:mark", {
 			{ -0.1, -0.5, -0.1, 0.1, 1.5, 0.1 },
 			},
 		},
-
         after_place_node = function(pos, placer, itemstack)
         	-- hole die Position
         	-- speicher diese am Spieler
         	-- hat er pos1 und pos2 kann man mit rechtsclick das Gebiet setzen
         	-- die marker verschwinden dann
-           --markers.marker_placed( pos, placer, itemstack );
-           rac:marker_placed( pos, placer, itemstack )
-           
+          --markers.marker_placed( pos, placer, itemstack );
+          rac:marker_placed( pos, placer, itemstack )
+					minetest.after(16,function()
+						minetest.set_node(pos, {name="air"})
+					end)
         end,
 
+--				on_timer = function(pos, elapsed)
+--					
+--				end,
         -- the node is digged immediately, so we may as well do all the work in can_dig (any wrong digs are not that critical)
  --       can_dig = function(pos,player)
  --      	-- nur der owner kann abbauen
@@ -104,7 +108,97 @@ minetest.register_craft({
 
 
 
+-- showarea_outback
+minetest.register_entity("rac:showarea_outback",{
+	on_activate = function(self, staticdata, dtime_s)
+		minetest.after(16,function()
+			self.object:remove()
+		end)
+	end,
+	initial_properties = {
+		hp_max = 1,
+		physical = true,
+		weight = 0,
+		visual = "mesh",
+		mesh = "landrush_showarea.x",
+		textures = {nil, nil, "showarea_outback.png", "showarea_outback.2.png", "showarea_outback.png", "showarea_outback.2.png"}, -- number of required textures depends on visual
+		colors = {}, -- number of required colors depends on visual
+		spritediv = {x=1, y=1},
+		initial_sprite_basepos = {x=0, y=0},
+		is_visible = true,
+		makes_footstep_sound = false,
+		automatic_rotate = 0,
+	}
+})
+-- showarea_city
+minetest.register_entity("rac:showarea_city",{
+	on_activate = function(self, staticdata, dtime_s)
+		minetest.after(16,function()
+			self.object:remove()
+		end)
+	end,
+	initial_properties = {
+		hp_max = 1,
+		physical = true,
+		weight = 0,
+		visual = "mesh",
+		mesh = "landrush_showarea.x",
+		textures = {nil, nil, "showarea_city.png", "showarea_city.2.png", "showarea_city.png", "showarea_city.2.png"}, -- number of required textures depends on visual
+		colors = {"green"}, -- number of required colors depends on visual
+		spritediv = {x=1, y=1},
+		initial_sprite_basepos = {x=0, y=0},
+		is_visible = true,
+		makes_footstep_sound = false,
+		automatic_rotate = 0,
+	}
+})
+-- showarea_plot
+minetest.register_entity("rac:showarea_plot",{
+	on_activate = function(self, staticdata, dtime_s)
+		minetest.after(16,function()
+			self.object:remove()
+		end)
+	end,
+	initial_properties = {
+		hp_max = 1,
+		physical = true,
+		weight = 0,
+		visual = "mesh",
+		mesh = "landrush_showarea.x",
+		textures = {nil, nil, "showarea_plot.png", "showarea_plot.2.png", "showarea_plot.png", "showarea_plot.2.png"}, -- number of required textures depends on visual
+		colors = {}, -- number of required colors depends on visual
+		spritediv = {x=1, y=1},
+		initial_sprite_basepos = {x=0, y=0},
+		is_visible = true,
+		makes_footstep_sound = false,
+		automatic_rotate = 0,
+	}
+})
 
+-- showarea_owned
+minetest.register_entity("rac:showarea_owned",{
+	on_activate = function(self, staticdata, dtime_s)
+		minetest.after(16,function()
+			self.object:remove()
+		end)
+	end,
+	initial_properties = {
+		hp_max = 1,
+		physical = true,
+		weight = 0,
+		visual = "mesh",
+		mesh = "landrush_showarea.x",
+		textures = {nil, nil, "showarea_owned.png", "showarea_owned.2.png", "showarea_owned.png", "showarea_owned.2.png"}, -- number of required textures depends on visual
+		colors = {}, -- number of required colors depends on visual
+		spritediv = {x=1, y=1},
+		initial_sprite_basepos = {x=0, y=0},
+		is_visible = true,
+		makes_footstep_sound = false,
+		automatic_rotate = 0,
+	}
+})
+
+--[[
 minetest.register_entity("rac:showarea",{
 	on_activate = function(self, staticdata, dtime_s)
 		minetest.after(16,function()
@@ -118,15 +212,16 @@ minetest.register_entity("rac:showarea",{
 		visual = "mesh",
 		mesh = "landrush_showarea.x",
 		textures = {nil, nil, "landrush_showarea.png", "landrush_showarea.png", "landrush_showarea.png", "landrush_showarea.png"}, -- number of required textures depends on visual
-		colors = {}, -- number of required colors depends on visual
+		colors = {2}, -- number of required colors depends on visual
 		spritediv = {x=1, y=1},
 		initial_sprite_basepos = {x=0, y=0},
 		is_visible = true,
 		makes_footstep_sound = false,
-		automatic_rotate = false,
+--		automatic_rotate = false,
 	}
 })
 
+]]--
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
 -- entity rac:pos1

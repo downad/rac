@@ -278,93 +278,7 @@ function rac:create_data_string(owner,region_name,claimable,zone,protected,guest
 	return 0,data_string
 end
 
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- rac:check_region_integrity()
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- durchlaufe alle region, 
--- kontrolliere region_data,
--- falls data == nil
--- owner = serveradmin, protected = true, der rest default.
--- modifiziere den region_data_string
--- speichere die modifizierte Region ab
---
---
--- input:
--- 	nothing
---
--- return:
---	nothing
---
--- msg/error handling: no
--- 	err,id
-function rac:check_region_integrity()
-	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:check_region_integrity - Version: "..tostring(func_version)	)
-	end
-	local counter = 0 -- die 1. REgion hat immer die ID 0
-	local err = 0 -- No Error
-	local region_data, new_data_string
-	local must_modify = false
-	local owner = rac.wilderness.name
-	local region_name = "LostArea"
-	local claimable = rac.region_attribute.claimable
-	local zone = rac.region_attribute.zone
-	local protected = true
-	local guests_string = rac.region_attribute.guests
-	local pvp = rac.region_attribute.pvp
-	local mvp = rac.region_attribute.mvp
-	local effect = rac.region_attribute.effect
-	local do_not_check_player = true
-	
-	while rac.rac_store:get_area(counter) do
-		-- hole das region_data
-		local err, pos1,pos2,data = rac:get_region_data_by_id(counter,false)
-		if err == 0 then
-			rac:msg_handling(err)
-		end
-		-- prüfe data
-		if region_data == nil then --kein data vorhanden
-			must_modify = true
-			region_name = region_name..tostring(counter)
-			err, new_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
-		end
-		
-		-- es muss etwas angepasst werden!
-		if must_modify then
-			-- erstelle den neuen data_string
-				-- only for debugging
-			if rac.debug == true then
-				minetest.log("action", "[" .. rac.modname .. "] ***********************************************")
-				minetest.log("action", "[" .. rac.modname .. "] region_ID: "..tostring(counter))
-				minetest.log("action", "[" .. rac.modname .. "] region_name: "..tostring(region_name))
-				minetest.log("action", "[" .. rac.modname .. "] owner: "..tostring(owner))
-				minetest.log("action", "[" .. rac.modname .. "] claimable: "..tostring(claimable))
-				minetest.log("action", "[" .. rac.modname .. "] zone: "..tostring(zone))
-				minetest.log("action", "[" .. rac.modname .. "] protected: "..tostring(protected))
-				minetest.log("action", "[" .. rac.modname .. "] guests_string: "..tostring(guests_string))
-				minetest.log("action", "[" .. rac.modname .. "] pvp: "..tostring(pvp))
-				minetest.log("action", "[" .. rac.modname .. "] mvp: "..tostring(mvp))
-				minetest.log("action", "[" .. rac.modname .. "] effect: "..tostring(effect))
-				minetest.log("action", "[" .. rac.modname .. "] do_not_check_player: "..tostring(do_not_check_player))
-			end
-			err, new_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
-			minetest.log("action", "[" .. rac.modname .. "] rac:check_region_attribute_version - region_data: "..tostring(minetest.serialize(region_data))	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:check_region_attribute_version - new_data_string: "..tostring(new_data_string)	)
-			rac:msg_handling(err) 
-			 
-			-- update region
-			err = rac:update_regions_data(counter,pos1,pos2,new_data_string)
-			rac:msg_handling(err) 
-		end
-		must_modify = false
-		counter = counter + 1
-	end
-	
-	
-end
+
 
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
@@ -641,8 +555,8 @@ end
 -- rac:marker_placed( pos, placer, itemstack )
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- Die Marker kann jeder setzen, unabhängig vom Privileg
--- Setzen einen Marker pos1 oder pos2
+-- Die Marker immer gesetzt werden, die Marker löschen sich selbständig nach rac.marker_delete_time
+-- Setze einen Marker pos1 oder pos2
 -- Wurde der 2. Marker gesetz wird das Gebiet versucht zu claimen
 -- 	dort in der Claim-Funktion
 --		stimmen die Privs
@@ -658,11 +572,14 @@ end
 --
 -- return:
 --	nothing
--- msg/error handling: no
+--
+-- msg/error handling: yes
+--	prüfe die Privilegien
 function rac:marker_placed( pos, placer, itemstack )
 	local func_version = "1.0.0"
-	if rac.show_func_version  then
-		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - Version: "..tostring(func_version)	)
+	local func_name = "rac:marker_placed"
+	if rac.show_func_version and rac.debug_level > 8 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
 	--sind pos und placer vorhanden
@@ -683,6 +600,10 @@ function rac:marker_placed( pos, placer, itemstack )
   meta:set_string( 'owner',    name );
   -- this allows protection of this particular marker to expire
   meta:set_string( 'time',     tostring( os.time()) );
+	minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.list_of_marker mit pos gesetzt = "..tostring(pos)	)
+  -- table.insert(rac.list_of_marker, pos)
+
+
 
 	-- setzte pos1 oder pos2 in gang 
 	-- ist schon ein command_players.pos1 vorhanden dann fülle pos2 ansonsten pos1 
@@ -691,21 +612,21 @@ function rac:marker_placed( pos, placer, itemstack )
 	if not rac.command_players[name] then
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - Setze Ecke 1: "	)
 		err = rac:command_pos(name,pos,1,false)
-		rac:msg_handling(err)
+		rac:msg_handling(err,func_name)
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] name = "..tostring(name)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] pos1 = "..tostring(rac.command_players[name].pos1)	)
 		
 	else
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - Setze Ecke 2: "	)
 		err = rac:command_pos(name,pos,2,false)
-		rac:msg_handling(err)
+		rac:msg_handling(err,func_name)
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] name = "..tostring(name)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] pos2 = "..tostring(rac.command_players[name].pos2)	)
 
 		-- checke Logik, passt der Raum usw.
 		-- rufe set_region auf, evtl. FORM?
 		-- lösche rac.command[name] ist nicht nötig, das macht rac:command_set
-		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - Setze Gebiet: "	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - versuche das Gebiet zu setzen. "	)
 		-- teste die Höhe (y-Werte)
 		-- speicher die Position für später 
 		local pos1 = rac.command_players[name].pos1
@@ -730,7 +651,7 @@ function rac:marker_placed( pos, placer, itemstack )
 		-- mit den ggf um rac.marker_modify_height veränderten Höhe wird das Gebiet angelegt
 		-- region_name muss um 4 verlängert werden, da command_set links was abschneidet.
 		err = rac:command_set("set "..region_name, name) 
-		rac:msg_handling(err)	
+		rac:msg_handling(err,func_name)	
 		rac.command_players[name] = nil	
 
 			
@@ -756,16 +677,20 @@ end
 --		name			as string (playername)
 -- 
 -- return:
---		true 		Spieler darf
+--  	true/false, table
+--		true 		Gebiet setzen ist erlaubt
+--		false 	Das Gebiet kann nicht gesetzt werden
 -- 		Table 	dem was der admin setzen kann
---							city = true/false
---							plot = true/false
---							outback = true/false 
+--			zone_table = {
+--						player=false, 					-- false = admin, true = Player
+--						plot_id = nil,					-- die ID des Plots, damit ein Player ihn ownen kann
+--						plot = true, 						-- kann nur von admin gesetzt werden
+--						city = true, 						-- kann nur von admin gesetzt werden
+--						outback = true, 				-- kann nur von admin gesetzt werden 
 --
 --
 -- msg/error handling: YES
--- return true oder plot,city,outback für admin
--- return 31 -- "msg: You don't have the privileg 'region_mark'! ",
+-- return 31 -- "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
 -- return 32 -- "msg: Your region is too small (x)!",
 -- return 33 -- "msg: Your region is too small (z)!",
 -- return 34 -- "msg: Your region is too small (y)!",
@@ -773,13 +698,16 @@ end
 -- return 36 -- "msg: Your region is too width (z)!",
 -- return 37 -- "msg: Your region is too hight (y)!",
 -- return 38 -- "msg: There are other region in. You can not mark this region",
+-- return 42 -- [42] = "ERROR: func: rac:command_pos - kein Spieler mit dem Namen gefunden",
 function rac:can_player_set_region(edge1, edge2, name)
 	local func_version = "1.0.0"
-	if rac.show_func_version  then
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - Version: "..tostring(func_version)	)
+	local func_name = "rac:expcan_player_set_region"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
-	-- check if player privilegs
-	-- if region_admin, he can place everythere, return true
+	local err
+	
+	-- check if player, get privilegs
 	local player = minetest.get_player_by_name(name)
 	if not player then 
 		return 45 -- [42] = "ERROR: func: rac:command_pos - kein Spieler mit dem Namen gefunden",
@@ -815,16 +743,255 @@ function rac:can_player_set_region(edge1, edge2, name)
 	end --if can_modify.set then
 	
 	-- Definition der Rückgabewerte
-	local admin_table = { plot = true, city = true, outback = true, change_owner = false, plot_id = nil}
-	local return_player = false
+	-- in zone_table wird zurückgegeben, welche zone gesetzt werden kann.
+	-- player = false, der admin
+	-- player = true, der Spieler, der kann nur plot oder owned
+	local zone_table = {
+			player=false, 					-- false = admin, true = Player
+			plot_id = nil,					-- die ID des Plots, damit ein Player ihn ownen kann
+			plot = true, 						-- kann nur von admin gesetzt werden
+			city = true, 						-- kann nur von admin gesetzt werden
+			outback = true, 				-- kann nur von admin gesetzt werden
+			}
+	-- Rückgabewert, ob die Region gesetzt werden darf		
+	local can_set_region = false 
 	
+	--[[		
 	-- check ob die Region eine andere betrifft	
-	-- schaue ob die Region in AreaStore ist
-	local region_has_regions = rac.rac_store:get_areas_in_area(edge1,edge2,true,true) --accept_overlap, include_borders, include_data):
-	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions type - "..tostring(type(region_has_regions))	)
-	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions: serialize - "..tostring(minetest.serialize(region_has_regions))	)
-	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions: value - "..tostring(region_has_regions)	)
+	local counter = 0
+
+	local region_has_regions = rac.rac_store:get_areas_in_area(edge1,edge2,true,true,true) --accept_overlap, include_borders, include_data)
 	
+	-- die ID der Region ist im Key
+	-- zähle die schleife damit man erkennen kann wieviele Region sich hier treffen 
+	local region_id = {} -- maximal 3 Region überlappen
+	local region = {} -- maximal 3 Region überlappen
+	for id, data in pairs(region_has_regions) do	
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - counter = "..tostring(counter) )  
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions k = "..tostring(id) )  
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions v = "..tostring(data) )  
+		counter = counter + 1
+		table.insert(region_id, id)
+		table.insert(region, data)
+	end
+	]]--
+	local region_id = rac:region_has_regions(edge1,edge2)
+	
+	
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_id  "..tostring(#region_id) )  
+	
+	-- es wurde keine andere Region gefunden
+	if #region_id == 0 then 
+		-- Player mit can_modify.set = true
+		if can_modify.admin then
+			-- setzte die Region mit zone = outback
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - keine Region, Player - #region_id == 0 " )  
+			zone_table = {
+				player=false, 					-- true = Player
+				plot_id = nil,				
+				plot = false, 				-- kann nur von admin gesetzt werden
+				city = false, 				-- kann nur von admin gesetzt werden
+				outback = true, 			-- kann nur von admin gesetzt werden
+				}
+				can_set_region = true -- player darf setzen		
+		else
+			-- setzte die Region mit zone = owned
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - keine Region, Player - #region_id == 0 " )  
+			zone_table = {
+				player=true, 					-- true = Player
+				plot_id = nil,				
+				plot = false, 				-- kann nur von admin gesetzt werden
+				city = false, 				-- kann nur von admin gesetzt werden
+				outback = false, 			-- kann nur von admin gesetzt werden
+				}
+				can_set_region = true -- player darf setzen
+		end
+	elseif #region_id == 1 then
+	elseif #region_id == 2 then
+	elseif #region_id == 3 then
+	elseif #region_id > 3 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_has_regions > 3  "	)		
+		return 38 -- [38] = "ERROR: func: rac:can_player_set_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
+	end
+	return can_set_region,zone_table
+end
+--[[
+
+
+	
+	-- es gibt keine Region
+	if region_has_regions[1].data == nil then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions[1] == nil "	)
+		-- nicht in einer Region, dann wildniss
+		-- prüfe claimable der Wildnis / oder region_admin
+		if rac.wilderness.claimable or can_modify.admin then
+			return true, admin_table
+		else
+			return 53 -- [53] = "ERROR: func: rac:can_player_set_region - Das Gebiete hat kein 'claimable' gesetzt!",
+		end 
+	-- es gibt eine überlappende Region 
+	-- claimable = false -> player kann nicht, admin kann
+	elseif #region_has_regions == 1 then --if region_has_regions == nil then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_has_regions == 1  "	)
+		-- es gibt eine Region, allowed: outback, city, plot
+		-- darf man hier claimen
+		-- hole aus der Table die table mit data
+		region1 =  minetest.deserialize(region_has_regions[1].data)
+		if region1.claimable then
+			-- wenn es outback oder city ist und claimable = true, dann darf der Spieler setzen
+			if region1.zone == "city"  then
+				return_player = true
+				admin_table.city = false
+			elseif region1.zone == "outback" then
+				return_player = true
+				admin_table.outback = false
+			elseif region1.zone == "plot" then
+				return_player = false
+				admin_table.plot = false
+				admin_table.change_owner = true
+				region_center = 
+					((region_has_regions[1].max.x + region_has_regions[1].min.x) / 2)..",".. -- x
+					((region_has_regions[1].max.y + region_has_regions[1].min.y) / 2)..",".. -- y
+					((region_has_regions[1].max.z + region_has_regions[1].min.z) / 2) -- z
+				admin_table.plot_id = rac.rac_store:get_areas_for_pos(region_center.string_to_pos,true,false)
+			end
+		end -- if region1.claimable then
+		return return_player,admin_table
+	-- prüfe die Anzahl der überalppenden Gebiete
+	elseif #region_has_regions == 2 then --if region_has_regions == nil then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_has_regions == 2  "	)
+		-- es gibt zwei Regionen
+		-- ein Spieler darf nur claimen wenn
+		--	claimable Reihenfolge plot, city, outback 
+		--	city/outback - city/plot - outback/plot
+		-- für Spieler
+		-- wenn 1 claimable und 1 = plot, dann 2 city oder outback
+		-- wenn 1 claimable und 1 = city, dann 2 outback
+		-- wenn 1 claimable und 1 = outback -- kann nicht claimen
+		-- wenn 2 claimable und 2 = plot, dann 1 city oder outback
+		-- wenn 2 claimable und 2 = city, dann 1 outback
+		-- wenn 2 claimable und 2 = outback -- kann nicht claimen
+		-- der Admin kann
+		--	city/outback = plot - city/plot =outback - outback/plot = city 
+		-- hole aus der Table die table mit data
+		region1 =  minetest.deserialize(region_has_regions[1].data)
+		region2 =  minetest.deserialize(region_has_regions[2].data)
+		if region1.claimable then
+			-- wenn es outback oder city ist und claimable = true, dann darf der Spieler setzen
+			if region1.zone == "plot"  then
+				if region2.zone == "city" or region2.zone == "outback" then
+					return_player = false
+					admin_table.change_owner = true
+					region_center = 
+						((region_has_regions[1].max.x + region_has_regions[1].min.x) / 2)..",".. -- x
+						((region_has_regions[1].max.y + region_has_regions[1].min.y) / 2)..",".. -- y
+						((region_has_regions[1].max.z + region_has_regions[1].min.z) / 2) -- z
+					admin_table.plot_id = rac.rac_store:get_areas_for_pos(region_center.string_to_pos,true,false)
+				end 
+			elseif region1.zone == "city" then
+				if region2.zone == "outback" then
+					return_player = true	
+				end
+			end
+		end
+		if region2.claimable then
+			-- wenn es outback oder city ist und claimable = true, dann darf der Spieler setzen
+			if region2.zone == "plot"  then
+				if region1.zone == "city" or region1.zone == "outback" then
+					return_player = false
+					admin_table.change_owner = true
+					region_center = 
+						((region_has_regions[2].max.x + region_has_regions[2].min.x) / 2)..",".. -- x
+						((region_has_regions[2].max.y + region_has_regions[2].min.y) / 2)..",".. -- y
+						((region_has_regions[2].max.z + region_has_regions[2].min.z) / 2) -- z
+					admin_table.plot_id = rac.rac_store:get_areas_for_pos(region_center.string_to_pos,true,false)
+				end --admin_table.city = false
+			elseif region2.zone == "city" then
+				if region1.zone == "outback" then
+					return_player = true	
+				end --admin_table.city = false
+			end	
+		end
+		-- für den admin
+		if can_modify.admin then
+			if region1.zone == "city" or region2.zone == "city" then
+				admin_table.city = false
+			end
+			if region1.zone == "plot" or region2.zone == "plot" then
+				admin_table.plot = false
+			end
+			if region1.zone == "outback" or region2.zone == "outback" then
+				admin_table.outback = false
+			end			
+		end
+		return return_player,admin_table
+	elseif #region_has_regions == 3 then
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_has_regions == 1  "	)
+		-- es gibt drei Regionen
+		-- ein Spieler darf nur claimen wenn
+		--	claimable Reihenfolge plot, city, outback 
+		--	city/outback - city/plot - outback/plot
+		-- für Spieler
+		-- wenn 1 claimable und 1 = plot, dann 2 city oder outback
+		-- wenn 2 claimable und 2 = plot, dann 1 city oder outback
+		-- return ist dann false und admin_table.change_owner = true
+		-- der Admin kann
+		-- kann keine weiteren Gebiete überlappen lassen
+		-- hole aus der Table die table mit data
+		region1 =  minetest.deserialize(region_has_regions[1].data)
+		region2 =  minetest.deserialize(region_has_regions[2].data)
+		region3 =  minetest.deserialize(region_has_regions[3].data)
+		if can_modify.set then
+			if region1.zone == "plot" and region1.claimable then
+				region_center = 
+					((region_has_regions[1].max.x + region_has_regions[1].min.x) / 2)..",".. -- x
+					((region_has_regions[1].max.y + region_has_regions[1].min.y) / 2)..",".. -- y
+					((region_has_regions[1].max.z + region_has_regions[1].min.z) / 2) -- z
+				admin_table.plot_id = rac.rac_store:get_areas_for_pos(region_center.string_to_pos,true,false)
+				if region2.zone == "city" or region3.zone == "city" then
+					admin_table.city = true
+				elseif region2.zone == "outback" or region3.zone == "outback" then
+					admin_table.outback = true
+				end 
+			elseif region2.zone == "plot" and region2.claimable then
+				region_center = 
+					((region_has_regions[2].max.x + region_has_regions[2].min.x) / 2)..",".. -- x
+					((region_has_regions[2].max.y + region_has_regions[2].min.y) / 2)..",".. -- y
+					((region_has_regions[2].max.z + region_has_regions[2].min.z) / 2) -- z
+				admin_table.plot_id = rac.rac_store:get_areas_for_pos(region_center.string_to_pos,true,false)
+				if region1.zone == "city" or region3.zone == "city" then
+					admin_table.city = true
+				elseif region1.zone == "outback" or region3.zone == "outback" then
+					admin_table.outback = true
+				end 
+			elseif region3.zone == "plot" and region3.claimable then
+				region_center = 
+					((region_has_regions[3].max.x + region_has_regions[3].min.x) / 2)..",".. -- x
+					((region_has_regions[3].max.y + region_has_regions[3].min.y) / 2)..",".. -- y
+					((region_has_regions[3].max.z + region_has_regions[3].min.z) / 2) -- z
+				admin_table.plot_id = rac.rac_store:get_areas_for_pos(region_center.string_to_pos,true,false)
+				if region1.zone == "city" or region1.zone == "city" then
+					admin_table.city = true
+				elseif region1.zone == "outback" or region1.zone == "outback" then
+					admin_table.outback = true
+				end 
+			end
+			if admin_table.city and admin_table.outback then
+				admin_table.city = false
+				admin_table.outback = false
+				admin_table.change_owner = true
+				return_player = false
+			end	
+		end
+		return return_player,admin_table
+	else
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_has_regions > 3  "	)		
+		return 38 -- [38] = "ERROR: func: rac:can_player_set_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
+	end	
+end
+	
+	]]--
+--[[	
 	if region_has_regions[1] == nil then
 		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions[1] == nil "	)
 		-- nicht in einer Region, dann wildniss
@@ -857,6 +1024,7 @@ function rac:can_player_set_region(edge1, edge2, name)
 		-- prüfe die Anzahl der überalppenden Gebiete
 		return return_player,admin_table
 	elseif #region_has_regions == 2 then --if region_has_regions == nil then
+	
 		-- es gibt zwei Regionen
 		-- ein Spieler darf nur claimen wenn
 		--	claimable Reihenfolge plot, city, outback 
@@ -957,10 +1125,76 @@ function rac:can_player_set_region(edge1, edge2, name)
 		return 38 -- [38] = "ERROR: func: rac:can_player_set_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
 	end	
 end
+]]--
 
 
 
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:region_in_region(pos1,pos2)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- Gibt es in dem Bereich, dieser neuen Region andere Regionen?
+-- - keine andere Region: jeder mit region_set darf setzen
+-- - eine andere Region: diese ist "city" -> admin kann plot oder outback setzen
+-- - eine andere Region: diese ist "outback" -> admin kann plot oder city setzen
+-- - zwei andere Regionen: outback und city -> admin kann plot
+-- - eine andere Region: diese ist "plot" dann darf man nichs setzen
+-- - mehrere anderer Regionen: man darf nicht setzen	
+--
+--
+-- input: 
+--		pos1,pos2 	als Positionsvektor
+--
+-- return:
+-- 	nil  - keine andere Region betroffen
+--	table - mit den ID der betroffenen Regionen
+-- 	
+-- msg/error handling: no
+function rac:OLD_region_in_region(pos1,pos2)
+	local func_version = "1.0.0"
+	if rac.show_func_version  then
+		minetest.log("action", "[" .. rac.modname .. "] rac:region_in_region - Version: "..tostring(func_version)	)
+	end
+-- get all regions in this box
+	local found = rac.rac_store:get_areas_in_area(pos1,pos2,true,true) --accept_overlap, include_borders, include_data):
+	local is_city = false
+	local count = 0
+	
+	-- loop all region
+	for region_id,v in pairs(found) do
+		-- if in one region the city-attribut is set is counts for all region there!
+		minetest.log("action", "[" .. rac.modname .. "] region_in_region! region_id "..tostring(region_id) )  
+--		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! city "..tostring(raz:get_region_attribute(region_id,"city")) )  
+--		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! plot "..tostring(raz:get_region_attribute(region_id,"plot")) )  
 
-
+		-- city hat plots und freie stellen zwischen den plots
+		-- in einer City kann der region_admin plots setzen.
+		if rac:get_region_attribute(region_id,"zone") == "city" then
+			is_city = true
+		end
+		-- are there more than 1 region
+		count = count + 1 
+	end -- for region_id,v in pairs(found) do
+	
+	-- check:
+	minetest.log("action", "[" .. rac.modname .. "] region_is_plot! count "..tostring(count) ) 
+	
+	-- es wurde keine Region gefunden - man kann diese Region also anlegen 
+	if count == 0 then
+		return nil			-- no regions found
+	end
+	
+	-- 1 Region gefunden
+	-- ist es eine City und kein Plot, kann man die Region anlegen
+	if count == 1 then
+		if is_city then
+			return true
+		end	
+	-- mehr als 2 Regionen wurden gefunden, dann geht nichts
+	else
+		return count 	-- anzahl der gefunden Regionen
+	end
+end
 
 
