@@ -8,7 +8,7 @@
 	--		ERROR: 	-> Ausgabe in minetest.log
 	--		Info:		-> Ausgabe in minetest.log
 	--		msg: 		-> Ausgabe erfolgt nur an den Spieler
-rac.max_error = 70	
+rac.max_error = 72
 rac.error_msg_text = {
 		[1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
 		[2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
@@ -80,5 +80,8 @@ rac.error_msg_text = {
 		[68] = "ERROR: func: rac:command_border - Dir fehlt das Privileg 'interact'!",
 		[69] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
 		[70] = "msg: Invalid usage.  Type \"/region help {command}\" for more information.",
+		[71] = "ERROR: func: command_set - region_name zu lang!",
+		[72] = "ERROR: func: can_player_set_region - Bezeichner Zone1 ist gleich Zone2.",
+		[73] = "ERROR: func: can_player_set_region - Mehr als 2 Zonen überlappen.",
 		
 	}

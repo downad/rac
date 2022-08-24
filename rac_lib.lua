@@ -84,12 +84,12 @@ function rac:msg_handling(err, func, name)
 	
 	-- Testen ob err vom Typ number ist
 	if type(err) == "number" then
-		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err.type: "..tostring(type(err))	)
+		-- minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err.type: "..tostring(type(err))	)
 		if err > rac.max_error then
 			-- [3] = "ERROR: func: rac:msg_handling(err, name) - die Nummer err ist größer als erlaubt!!!!",
 			error_msg = rac.error_msg_text[3]
 		else
-			minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err <= rac.max_error: "..tostring(rac.max_error)	)
+			-- minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err <= rac.max_error: "..tostring(rac.max_error)	)
 			error_msg = rac.error_msg_text[err]
 			-- check ERROR
 			if error_msg:sub(1, 6) == "ERROR:" then
@@ -953,6 +953,7 @@ end -- rac:can_modify = rac:player_can_modify_region_id(player)
 --		region_attribute	as string
 --		value				as boolean or string, depending on region_attribute
 --		bool				as boolean, only used for invite or ban guest
+--		by_function as boolean, wenn true, dann wird der user nicth gechecked	
 -- the default bool is 'nil' - this bool is used to add or remove guests 
 -- this function checks id, region_attribut and value = bool or value = string (effects - hot, bot, holy, dot, choke, evil)
 --
@@ -967,7 +968,7 @@ end -- rac:can_modify = rac:player_can_modify_region_id(player)
 --
 -- msg/error handling: YES
 -- check privs / owner
-function rac:region_set_attribute(name, id, region_attribute, value, bool)
+function rac:region_set_attribute(name, id, region_attribute, value, bool,by_function)
 	local func_version = "1.0.0"
 	local func_name = "rac:region_set_attribute"
 	if rac.show_func_version and rac.debug_level > 8 then
@@ -1004,9 +1005,10 @@ function rac:region_set_attribute(name, id, region_attribute, value, bool)
 		end
 		-- check if player is owner of the region
 		-- or admin (can_modify.admin == true
-		if name ~= data.owner then
-			local can_modify = rac:player_can_modify_region_id(player)
-			if not can_modify.admin then
+		if name ~= data.owner  then
+			local can_modify = rac:player_can_modify_region_id(name)
+			if not can_modify.admin and by_function ~= true then
+					minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - by_function = "..tostring(by_function)	)
 				return 22 --		[22] = "ERROR: func: rac:region_set_attribute - You are not the owner of this region! ",
 			end
 		end
@@ -1397,7 +1399,7 @@ end
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- rac:region_has_regions(edge1,edge2)
+-- rac:get_regions_in_region(edge1,edge2)
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 -- prüfe ob in der Region zwischen edge1 und edge2 andere Regionen sind 
@@ -1407,16 +1409,18 @@ end
 --		edge1,edge2		as vector
 --
 -- return:
---	region_id
---	region_id as Table mit key = 1...n und value = region_id 
+--	region_id, region_data
+--	region_id 				als Table mit key = 1...n und value = region_id 
+-- 	region 						als Table mit min,max,data
 --
 -- msg/error handling: no 
-function rac:region_has_regions(edge1,edge2)
+function rac:get_regions_in_region(edge1,edge2)
 	local func_version = "1.0.0"
-	local func_name = "rac:region_has_regions"
-	if rac.show_func_version and rac.debug_level > 0 then
+	local func_name = "rac:get_regions_in_region"
+	if rac.show_func_version and rac.debug_level > 4 then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
+	--local counter = 0
 	local region_has_regions = rac.rac_store:get_areas_in_area(edge1,edge2,true,true,true) --accept_overlap, include_borders, include_data)
 	
 	-- die ID der Region ist im Key
@@ -1424,14 +1428,14 @@ function rac:region_has_regions(edge1,edge2)
 	local region_id = {} -- maximal 3 Region überlappen
 	local region = {} -- maximal 3 Region überlappen
 	for id, data in pairs(region_has_regions) do	
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - counter = "..tostring(counter) )  
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions k = "..tostring(id) )  
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_has_regions v = "..tostring(data) )  
-		counter = counter + 1
+		--minetest.log("action", "[" .. rac.modname .. "] rac:region_has_regions - counter = "..tostring(counter) )  
+		minetest.log("action", "[" .. rac.modname .. "] rac:region_has_regions - region_has_regions k = "..tostring(id) )  
+		minetest.log("action", "[" .. rac.modname .. "] rac:region_has_regions - region_has_regions v = "..tostring(data) )  
+		--counter = counter + 1
 		table.insert(region_id, id)
 		table.insert(region, data)
 	end
-	return region_id
+	return region_id,region
 end
 
 
@@ -1493,3 +1497,161 @@ function rac:draw_border(region_id)
 			collisionbox = {pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z},
 		})	
 end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:region_areasquare(edge1,edge2)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- berechnen die Fläche der Region (x,z) 
+--
+-- input:
+--		edge1, edge2 	als Koordinaten
+--
+-- return:
+--	squareblock		als Fläche von x+z 	
+--
+-- msg/error handling: no 
+function rac:region_areasquare(edge1,edge2)
+	local func_version = "1.0.0"
+	local func_name = "rac:region_areasquare"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local squareblock, a,b
+	a = edge1.x - edge2.x
+	if a < 0 then a = -a end
+	b = edge1.z - edge2.z
+	if b < 0 then b = -b end
+	squareblock = a * b
+	if rac.debug and rac.debug_level > 3 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - edge1: "..tostring(edge1)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - edge2: "..tostring(edge2)	)
+		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - a: "..tostring(a)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - b: "..tostring(b)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - squareblock: "..tostring(squareblock)	)
+	end	
+
+	return squareblock
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:get_stacked_zone_of_region(region_id)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- ausgehened von der region_id gibt die Funktion eine Liste zurück.
+-- in der Liste stehen alle Zonen zu der gegebenen ID
+-- mögliche Resultate:
+--	es ist nur die aktuelle Zone betroffen
+--			--> Rückgabe des Zonen-Bezeichners
+--	es sind mehrere Zonen betroffen
+--			--> Rückgabe aller Zonen-Bezeichner, sortiert nach
+--				outback, city, plot, owned
+--
+-- input:
+--		region_id			als Integer
+--
+-- return:
+--	stacked_zone		als table 	
+--			0					dieser Zonen-Bezeicher war nicht dabei
+--			1				dieser Zonen-Bezeicher war dabei
+--			2				der Zonen-Bezeicher der übergebenen Zone
+
+--
+-- msg/error handling: no 
+function rac:get_stacked_zone_of_region(region_id)
+	local func_version = "1.0.0"
+	local func_name = "rac:get_zone_stack_of_region"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local stacked_zone = {
+			outback = 0,
+			city = 0,
+			plot = 0,
+			owned = 0,
+			number = 0,
+	}
+	-- hole die min/max der aktuellen zone
+	local err, edge1,edge2,region_data = rac:get_region_data_by_id(region_id,false)
+	rac:msg_handling(err,func_name)
+		
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data.min = "..tostring(region_data.min)	)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data.max = "..tostring(region_data.max)	)
+		
+	-- rac:get_regions_in_region(edge1,edge2)
+	local found_region_id,found_region_data = rac:get_regions_in_region(edge1,edge2)
+
+	-- hole aus den Ergebnissen die zonen
+  -- durchlaufe alle Ergebnisse und setze stacked_zone auf true
+	-- baue die Rückgabe-Tabelle
+	for key, id in pairs(found_region_id) do
+		-- erstelle eine Table aus dem data_string
+		found_region_data[key].data = minetest.deserialize(found_region_data[key].data) 
+		stacked_zone[found_region_data[key].data.zone]=1
+	end
+	-- wieviele gab es?
+	stacked_zone.number = #found_region_id
+	stacked_zone[region_data.zone] = 2
+
+
+	-- Probleme???
+	--	auf city können mehrere plot / owned liegen
+	-- 	auf outback können mehrere city, plot und owned liegen
+		
+	return stacked_zone
+end
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:get_stacked_zone_as_string(region_id)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- ausgehened von der stacked_zone gibt die Funktion einen String zurück.
+-- stacked_zone value wird übersetzt
+--			0				rac.zone_text.none "none"/	dieser Zonen-Bezeicher war nicht dabei
+--			1				(rac.zone_text...) in Klammern je nach Wert	dieser Zonen-Bezeicher war dabei
+--			2				rac.zone_text... je nach Wert	dieser Zonen-Bezeicher war dabei
+--
+-- input:
+--		stacked_zone			als table
+--
+-- return:
+--	string_stacked_zone		als string 	
+--
+-- msg/error handling: no 
+function rac:get_stacked_zone_as_string(region_id)
+	local func_version = "1.0.0"
+	local func_name = "rac:get_zone_stack_of_region"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local string_stacked_zone = ""
+	local table_out = {
+			outback = 0,
+			city = 0,
+			plot = 0,
+			owned = 0,
+	}
+	local stacked_zone = rac:get_stacked_zone_of_region(region_id)
+	for zone, value in pairs(stacked_zone) do
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone: "..tostring(zone).." value = "..tostring(value)	)
+		if zone ~="number" then
+			if value == 1 then
+				table_out[zone] = " "..rac.zone_text[zone].." "
+			elseif  value == 2 then
+				table_out[zone] = " > "..rac.zone_text[zone].." < "
+			else
+				table_out[zone] = " "..rac.zone_text.none.." "
+			end
+		end
+	end
+	string_stacked_zone = table_out.outback..table_out.city..table_out.plot..table_out.owned
+	return string_stacked_zone
+end
+
+

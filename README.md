@@ -10,7 +10,7 @@ Kontrolle der Gebiete ohne ChatCommands
 + markers - Sokomine - https://github.com/Sokomine/markers (Links getestet: 01.08.22)
 
 
-# Die Idee
+# Die Idee  
 Ein Mod, um Gebiete anzulegen und zu schützen.
 Für das Gameplay: Gebiete mit Effekten zu versehen.
 Für die Builder: Gebiete als "City" zu schützen und darauf Bauplätze für Player bereitzustellen!
@@ -18,7 +18,6 @@ Zusätzlich ist es möglich auf Gebieten das PvP oder den Monsterdamage zu regel
 
 Dabei werden die Gebiete nicht mehr (ausschließlich) über ChatCommands gesteuert. 
 Es wurde ein RAC-Guide-Book eingeführt, über das der Spieler/Admin kontrolle über die Gebiete hat.  
-
 
 Dazu kann der Players {abhängig von Privilegien}
 - ein Gebiet "claimen", benennen, schützen, sowie umbenennen, einem neuen Besitzer übergeben oder löschen. 
@@ -36,13 +35,55 @@ dot| damage over time
 choke | schneller verbrauch der Atemluft
 evil | beides, dot und choke
 
+# Kurzanleitung
+Jede Zone besitzt Eigenschaften, wie z. B. einen Namen, einen Besitzer, einen Zonenbezeichner.
+Ist eine Position nicht geclaimed, ist sie 'Wildniss', und kann auch definiert werden.
+Eigenschaften sind auch so was wie geschützt, PVP ist erlaubt oder Monster machen keinen Schaden oder einen Effekt.
+Als Admin kann man erlauben, dass auf dem Gebiet andere Gebiete durch Spieler 'geclaimed' werden dürfen.
+
+Vorgehen:
+Im Vorfeld, kann man all diese Eigenschaften für die Wildniss vergeben.
+z. B. in der Wildnis sollen die Monster 2-fachen Schaden machen, PVP soll erlaubt sein und man darf keine Gebiete claimen.
+
+Als Admin kann man Regionen abstecken und diese als 'outback', 'city' oder 'plot' definieren.
+Dabei gilt, dass das 'outback' eine oder mehr anderer Zonen enthalten kann. Es können nie mehr als 3 Gebiete übereinander liegen.
+Das heißt, es kann an einer Position nur ein 'outback' geben, darauf kann eine 'city' und noch ein Bauplatz ('plot').
+
+Jetzt könnte man ein 'outback' erstellen, dort machen die Monster nur noch 1.5-fachen Schaden und das PVP ist verboten.
+Man könnte plots für die Spieler anlegen oder aber das Claimern durch die Spieler erlauben.
+
+In einer 'city' könnte man den Monsterschaden auf 1fach reduzieren oder auch ganz abschalten. PVP verbieten und das Gebiet schützen, 
+damit die Spieler die Infrastruktur nicht zerstören. 
+In einer Stadt gibt es Bauplätze, die der Admin vorgibt. Diese können vom Spieler geclaimed werden.
+
+Die Spieler - Alles kann über rac-guide eingestellt werden:
+Mit dem Privileg 'region_set' können auf den Gebieten mit claimable = true Gebiete sichern.
+Spieler können auch Besitzer eines Gebietes sein ohne das Privileg 'region_set', in dem sie das Gebiet übertragen bekommen.
+
+Jeder Spieler kann sein Gebiet 'schützen', umbenennen oder löschen. Falls mehrer Spieler zusammenspielen wollen, 
+können sie eingeladen werden und auch auf einem geschützten Gebiet bauen oder handeln.
+
+Gebiete der Spieler sind immer dem Zonen-Bezeichner 'owned' zugeordnet und werden von ihrem Spieler verwaltet.
+
+Wenn der Admin das möchte, kann er Spielern auch erlauben:
+- PVP auf ihren Gebieten zu erlauben/verbieten (Privileg 'region_pvp')
+- den Schaden der Monster auf ihren Gebieten zu erlauben/verbieten (Privileg 'region_mvp')
+- eine Effekt auf das Gebiet zu legen. Siehe Effekte, (Privileg 'region_effect')
+ 
+
+ 
+
 ## Versions
 - start Juni 2022 
-- v 0.8 - ein Großteil von raz ist umgeschrieben, das RAC-Guid-Book steht. 
+- v 0.8 - ein Großteil von raz ist umgeschrieben. Player kann Rac-Guide-Guid-Book nutzen.
+- v 0.9 - Rac-Guide-Guid-Book für admin, Regionen stapelbar -> outback, city, plot 
+- v 1.0 - Mobdamage je Zone, Key für Plot
+ 
 
 ### Roadmap
 - vollständiges ReDo von raz
 - Player kann über den Rac-Guide seine Gebiete anpassen
+- Admin kann outback,City und pots erzeugen.
 - das Claiming der Gebiete via Marker
 - das Claiming der Gebiete über anclicken
  
