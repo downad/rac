@@ -335,6 +335,7 @@ function rac:command_show(header, name,list_start,list_end)
 --	local pos1 = ""
 --	local pos2 = ""
 --	local data = ""
+	local stacked_zone = ""
 	local chat_string = ""
 	local chat_string_start = "### List of Regions ###"
 	if header == false or header == "status" then
@@ -391,7 +392,8 @@ function rac:command_show(header, name,list_start,list_end)
 				-- baue die Ausgaben zusammen
 				-- was soll da rein?
 				-- id, playername, Name der Region, pvp, mpv?
-				chat_string = chat_string.."\n ID: "..tostring(counter).." "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp)
+				stacked_zone = rac:get_stacked_zone_as_string(counter)
+				chat_string = chat_string.."\n ID: "..tostring(counter).." "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp).." Zonen: "..stacked_zone
 			end 
 		end -- if counter <= stop_list or stop_list < 0 then
 		counter = counter + 1
@@ -805,6 +807,57 @@ function rac:command_set(param, name)
 	end -- if can_modify.admin or can_modify.set then	
 end
 
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:command_compass(param, name)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- aktiviere den Compass zur Region
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- return:
+--	0			wenn ferig
+--	err 	wenn rac:get_region_data_by_id(region_id) einen error liefert
+--	74			[74] = "ERROR: func: command_compass - keine ID übergeben!",
+--
+-- msg/error handling: no
+function rac:command_compass(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_compass"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - param: "..tostring(param)	)
+	local region_id = param:sub(8, -1)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - number: "..tostring(region_id)	)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	region_id = tonumber(region_id)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	if region_id == nil then
+		minetest.chat_send_player(name, "compass hat keine ID übergeben bekommen!")
+		return 74 -- 		[74] = "ERROR: func: command_compass - keine ID übergeben!",
+	end
+	
+	-- gibt es diese Regions ID
+	local err,pos1, pos2, data = rac:get_region_data_by_id(region_id)
+	if err ~= 0 then
+		rac:msg_handling(err,func_name)
+	else
+		if rac.compass_players[name] == nil then
+			rac.compass_players[name] = { name = {} }
+		end
+		rac.compass_players[name] = {
+			active = true,
+			region_id = region_id,
+			}
+	end
+	return err
+end
 
 -----------------------------------------
 --

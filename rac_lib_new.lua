@@ -784,11 +784,12 @@ function rac:can_player_set_region(edge1, edge2, name)
 	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - type(region_data)  "..tostring(type(region)) ) 	
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data: "..tostring(minetest.serialize(region))	)	
 --	region_data = minetest.serialize(region_data)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].max: "..tostring(region[1].max)	)	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].min: "..tostring(region[1].min)	)	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(region[1].data:  "..tostring(type(region[1].data)) ) 	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - String region[1].data: "..tostring(region[1].data).."\n"	)
-
+	if #region_id ~= 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].max: "..tostring(region[1].max)	)	
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].min: "..tostring(region[1].min)	)	
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(region[1].data:  "..tostring(type(region[1].data)) ) 	
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - String region[1].data: "..tostring(region[1].data).."\n"	)
+	end
 	-- wandel String in Table um	(DESERIALISE)
 --	region[1].data = minetest.deserialize(region[1].data) 
 --	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - nach der Umwandlung type(region[1].data:  "..tostring(type(region[1].data)) ) 	
@@ -822,11 +823,11 @@ function rac:can_player_set_region(edge1, edge2, name)
 			can_set_region = true -- player darf setzen
 		end
 	elseif #region_id == 1 then
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - keine Region, Player - #region_id == 1 " )  
 		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_id  "..tostring(#region_id) ) 
 		-- wandel String in Table um	(DESERIALISE)
 		region[1].data = minetest.deserialize(region[1].data) 
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - nach der Umwandlung type(region[1].data:  "..tostring(type(region[1].data)) ) 	
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id[1]: "..tostring(region_id[1])	)	
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Betroffene region_id[1]: "..tostring(region_id[1])	)	
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].max: "..tostring(region[1].max)	)	
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].min: "..tostring(region[1].min)	)	
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[1].data.zone: "..tostring(region[1].data.zone)	)	
@@ -839,7 +840,7 @@ function rac:can_player_set_region(edge1, edge2, name)
 		--		plot und name ist ein Player
 		--			return PlotID zur übernahme
 		local zone = region[1].data.zone 
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone: "..tostring(zone)	)	
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Betroffen Region ist diese zone: "..tostring(zone)	)	
 		if zone == "outback" then
 			zone_table = {
 				player=false, 				-- false = admin
@@ -871,12 +872,24 @@ function rac:can_player_set_region(edge1, edge2, name)
 			end
 		elseif zone == "plot" and can_modify.admin == false then
 			-- sicher gehen, dass es kein admin ist!
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Zone ist plot, can_modify.admin == false") 	
 			zone_table = {
 				player=true, 					-- true = player
 				plot_id = region_id[1],				
 				plot = false, 				-- kann nur von admin gesetzt werden
 				city = false, 				-- kann nur von admin gesetzt werden
 				outback = false, 			-- kann nur von admin gesetzt werden
+				}
+			can_set_region = true -- player darf setzen
+		elseif (zone == "plot" or zone == "owned" ) and can_modify.admin == true then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Zone ist plot/owned, can_modify.admin == true") 	
+			-- sicher gehen, dass es der admin ist!
+			zone_table = {
+				player=false, 					-- false = admin
+				plot_id = region_id[1],				
+				plot = false, 				-- kann nur von admin gesetzt werden
+				city = false, 				-- kann nur von admin gesetzt werden
+				outback = true, 			-- kann nur von admin gesetzt werden
 				}
 			can_set_region = true -- player darf setzen
 		end

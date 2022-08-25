@@ -70,7 +70,14 @@ Wenn der Admin das möchte, kann er Spielern auch erlauben:
 - den Schaden der Monster auf ihren Gebieten zu erlauben/verbieten (Privileg 'region_mvp')
 - eine Effekt auf das Gebiet zu legen. Siehe Effekte, (Privileg 'region_effect')
  
-
+Claimen:
+mit dem Item rac:mark, setzt man an den gegenüber liegenden Ecken eines Gebietes eine Markierung. 
+Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
+- mit einem Zufallsnamen
+- als Geschützt markiert
+- PVP, Monsterdamage und Effekt wird auf ein default gestellt. (init.lua / region_attribute.XXXX )
+- für Spieler: claimable wird verboten
+- für Spieler: Zone wird als 'owned' bezeichnet
  
 
 ## Versions

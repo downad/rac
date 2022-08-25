@@ -762,7 +762,7 @@ end
 function rac:convert_string_to_table(string, seperator)
 	local func_version = "1.0.0"
 	local func_name = "rac:convert_string_to_table"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level > 4 then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 
@@ -770,7 +770,7 @@ function rac:convert_string_to_table(string, seperator)
 		seperator = ","
 	end
 	local value_table = {}
-	minetest.log("action", "[" .. rac.modname .. "] rac:convert_string_to_table - string: "..tostring(string)	)
+--	minetest.log("action", "[" .. rac.modname .. "] rac:convert_string_to_table - string: "..tostring(string)	)
 
 	value_table = string.split(string,seperator)
 
@@ -1363,19 +1363,19 @@ end
 function rac:get_center_of_box(pos1, pos2)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_center_of_box"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level > 4 then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
-	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box pos1 = "..minetest.serialize(pos1) )  
-	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box pos2 = "..minetest.serialize(pos2) )  
+--	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box pos1 = "..minetest.serialize(pos1) )  
+--	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box pos2 = "..minetest.serialize(pos2) )  
 
 	local x,y,z
 	x = math.abs( pos1.x - pos2.x ) / 2
 	y = math.abs( pos1.y - pos2.y ) / 2
 	z = math.abs( pos1.z - pos2.z ) / 2
-	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box x = "..tostring(x) )  
-	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box x = "..tostring(y) )  
-	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box x = "..tostring(z) )  
+--	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box x = "..tostring(x) )  
+--	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box y = "..tostring(y) )  
+--	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box z = "..tostring(z) )  
 
 	if pos1.x < pos2.x then
 		x = x + pos1.x
@@ -1467,35 +1467,41 @@ function rac:draw_border(region_id)
 	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border err = {"..tostring(err).."}" ) 
 	if err ~= 0 then
 		rac:msg_handling(err,func_name)
-	end
-	data = rac:get_region_attribute(region_id, "zone")
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border data = {"..tostring(data).."}" ) 
-	
-	-- suche das Zentrum
-	local center = rac:get_center_of_box(pos1, pos2)
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border center = {"..tostring(center).."}" )
-	-- je nach zone eine andere entity
-	if data == "outback" then
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - outback - data = {"..tostring(data).."}" ) 
-		box = minetest.add_entity(center, "rac:showarea_outback")	
-	elseif data == "city" then
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - city - data = {"..tostring(data).."}" ) 
-		box = minetest.add_entity(center, "rac:showarea_city")	
-	elseif data == "plot" then
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - plot - data = {"..tostring(data).."}" ) 
-		box = minetest.add_entity(center, "rac:showarea_plot")	
-	else -- default
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - owned - data = {"..tostring(data).."}" ) 
-		box = minetest.add_entity(center, "rac:showarea_default")	
-	end
- 
+	else
+		data = rac:get_region_attribute(region_id, "zone")
+		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border data = {"..tostring(data).."}" ) 
+		
+		-- suche das Zentrum	if rac.player_guide[player_name].active_region ~= nil then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - if rac.player_guide[player_name].active_region ~= nil then "	)
+		active_region = rac.player_guide[player_name].active_region
 
---			local box = minetest.env:add_entity(center, "rac:showarea")	
-	
-	box:set_properties({
-			visual_size={x=math.abs(pos1.x - pos2.x), y=math.abs(pos1.y - pos2.y), z=math.abs(pos1.z - pos2.z)},
-			collisionbox = {pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z},
-		})	
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - if rac.player_guide[player_name].active_region == nil then "	)
+		
+		local center = rac:get_center_of_box(pos1, pos2)
+		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border center = {"..tostring(center).."}" )
+		-- je nach zone eine andere entity
+		if data == "outback" then
+			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - outback - data = {"..tostring(data).."}" ) 
+			box = minetest.add_entity(center, "rac:showarea_outback")	
+		elseif data == "city" then
+			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - city - data = {"..tostring(data).."}" ) 
+			box = minetest.add_entity(center, "rac:showarea_city")	
+		elseif data == "plot" then
+			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - plot - data = {"..tostring(data).."}" ) 
+			box = minetest.add_entity(center, "rac:showarea_plot")	
+		else -- default
+			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - owned - data = {"..tostring(data).."}" ) 
+			box = minetest.add_entity(center, "rac:showarea_default")	
+		end
+	 
+
+	--			local box = minetest.env:add_entity(center, "rac:showarea")	
+		
+		box:set_properties({
+				visual_size={x=math.abs(pos1.x - pos2.x), y=math.abs(pos1.y - pos2.y), z=math.abs(pos1.z - pos2.z)},
+				collisionbox = {pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z},
+			})	
+	end
 end
 
 
@@ -1642,11 +1648,11 @@ function rac:get_stacked_zone_as_string(region_id)
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone: "..tostring(zone).." value = "..tostring(value)	)
 		if zone ~="number" then
 			if value == 1 then
-				table_out[zone] = " "..rac.zone_text[zone].." "
+				table_out[zone] = " ("..rac.zone_text[zone]..") "
 			elseif  value == 2 then
-				table_out[zone] = " > "..rac.zone_text[zone].." < "
+				table_out[zone] = " "..rac.zone_text[zone].." "
 			else
-				table_out[zone] = " "..rac.zone_text.none.." "
+				table_out[zone] = " ("..rac.zone_text.none..") "
 			end
 		end
 	end

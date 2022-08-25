@@ -8,7 +8,7 @@
 	--		ERROR: 	-> Ausgabe in minetest.log
 	--		Info:		-> Ausgabe in minetest.log
 	--		msg: 		-> Ausgabe erfolgt nur an den Spieler
-rac.max_error = 72
+rac.max_error = 74
 rac.error_msg_text = {
 		[1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
 		[2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
@@ -83,5 +83,6 @@ rac.error_msg_text = {
 		[71] = "ERROR: func: command_set - region_name zu lang!",
 		[72] = "ERROR: func: can_player_set_region - Bezeichner Zone1 ist gleich Zone2.",
 		[73] = "ERROR: func: can_player_set_region - Mehr als 2 Zonen überlappen.",
+		[74] = "ERROR: func: command_compass - keine ID übergeben!",
 		
 	}

@@ -131,7 +131,7 @@ rac.line = {
 -- zum Austausch zwischen dem guide und der Form
 --	rac.player_guide[player_name].err								-- Infomesg oder Errormeg
 -- 	rac.player_guide[player_name].region_id					-- Table mit den Region ID zur aktiven Region
--- 	rac.player_guide[player_name].active_region			-- aktive Region, eine Zahl von 1..3 => given_region_id
+-- 	rac.player_guide[player_name].active_region			-- aktive Region, eine Zahl von 1..3 => given_region
 -- 	rac.player_guide[player_name].do_this						-- do_this
 --
 -- msg/error handling: YES
@@ -152,7 +152,7 @@ function rac:guide(player,do_this)
 	local text = ""
 	local text_attribute = ""
 	local line = rac.line -- die Koordinaten der Zeilen 
-	local given_region_id = nil -- es wurde keine ID übergeben 
+	local given_region = nil -- es wurde keine ID übergeben 
 	-- da man mit dem Buch das Gebiet verwalten kann benötig man einige Werte
 	-- aus der Position ds Spieler wird können die Regions_ID ermittelt werden
 	local pos = vector.round(player:get_pos())
@@ -162,6 +162,8 @@ function rac:guide(player,do_this)
 	
 	-- hole den Playername 	
 	local player_name = player:get_player_name()
+	-- wurde eine ID übergeben, dann muss das aktiv gesetzt werden
+	local active_region = 1 -- das ist der key für region_id, ohne Übergabe das 1. Element
 
 	-- wurde zu diesem Player eine 	rac.player_guide[player_name] angelegt?
 	-- wenn ja, erfolgt der Aufruf dieser Funkion über eine Aktion aus dem Buch
@@ -185,7 +187,15 @@ function rac:guide(player,do_this)
 		end
 		
 		-- wurde eine ID übergeben?
-		given_region_id = rac.player_guide[player_name].active_region -- _id
+		given_region = rac.player_guide[player_name].active_region -- _id
+		
+		if rac.player_guide[player_name].active_region ~= nil then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - if rac.player_guide[player_name].active_region ~= nil then "	)
+			active_region = rac.player_guide[player_name].active_region
+		else
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - if rac.player_guide[player_name].active_region == nil then "	)
+
+		end
 	end	
 	
 	minetest.log("action", "[" .. rac.modname .. "] rac:guide - info_text: "..tostring(info_text)	)
@@ -197,8 +207,7 @@ function rac:guide(player,do_this)
 	-- hole die Region(en) zu der aktuellen Position
 	local region_data = {} --1,region_data2,region_data3												-- alle Region Atrtibute
 	local data
-	-- wurde eine ID übergeben, dann muss das aktiv gesetzt werden
-	local active_region = 1 -- das ist der key für region_id, ohne Übergabe das 1. Element
+
 	
 	local err,region_id = rac:get_region_at_pos(pos)
 		rac:msg_handling(err,func_name)	
@@ -221,15 +230,15 @@ function rac:guide(player,do_this)
 				end
 				-- es wurde ein ID übergeben
 				-- setzen aktive_id
-				if given_region_id ~= nil then
-					if given_region_id == id then active_region = key end
-				end	
+				--if given_region_id ~= nil then
+				--	if given_region_id == id then active_region = key end
+				--end	
 				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[key].region_name= "..tostring(region_data[key].region_name)	)
 			end
 			
 			minetest.log("action", "[" .. rac.modname .. "] rac:guide - #region_id: "..tostring(#region_id)	)
 			minetest.log("action", "[" .. rac.modname .. "] rac:guide - region_id[1]: "..tostring(region_id[1])	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:guide - given_region_id: "..tostring(given_region_id)	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:guide - given_region_id: "..tostring(given_region)	)
 			minetest.log("action", "[" .. rac.modname .. "] rac:guide - active_region: "..tostring(active_region)	)
 	else
 		minetest.log("action", "[" .. rac.modname .. "] rac:guide - keine region_id: "..tostring(err)	)
@@ -343,13 +352,23 @@ function rac:guide(player,do_this)
 		rac.player_guide[player_name].region_id	= region_id
 		rac.player_guide[player_name].active_region=active_region
 		
+		----
+		minetest.log("action", "[" .. rac.modname .. "] rac:guide Warum kann man nicht umstellen?"	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:guide - #region_id: "..tostring(#region_id)	)
+		minetest.log("action", "[" .. rac.modname .. "] rac:guide - active_region: "..tostring(active_region)	)
+		for key, id in pairs(region_id) do
+			minetest.log("action", "[" .. rac.modname .. "] rac:guide - key: "..tostring(key).." id = "..tostring(id)	)
+		end
+		----
+		
+		
 		-- unterscheiden nach can.modify.admin und owner
 		if #region_id > 0 then
-			region_text1 = "ID: "..region_id[1]
+			region_text1 = "ID "..region_id[1]..": "
 			if can_modify.admin then
-				region_text1 = region_text1.. " ( "..rac:get_stacked_zone_as_string(region_id[1])..") "			
+				region_text1 = region_text1.. " > "..rac:get_stacked_zone_as_string(region_id[1]).." <\n "			
 			end
-			region_text1 = region_text1.. ", Owner: "..region_data[1].owner..", "..region_data[1].region_name
+			region_text1 = region_text1.. "Owner: "..region_data[1].owner..", "..region_data[1].region_name
 			
 			form = form.."label[0,"..line.l1..";"..region_text1.."]"
 			if active_region == 1 and (can_modify.is_owner or can_modify.admin) then
@@ -359,11 +378,11 @@ function rac:guide(player,do_this)
 			end
 		end
 		if #region_id > 1 then
-			region_text2 = "ID: "..region_id[2]
+			region_text2 = "ID "..region_id[2]..": "
 			if can_modify.admin then
-				region_text2 = region_text2.. " ( "..rac:get_stacked_zone_as_string(region_id[2])..") "	
+				region_text2 = region_text2.. " > "..rac:get_stacked_zone_as_string(region_id[2]).." < \n "	
 			end
-			region_text2 = region_text2.. ", Owner: "..region_data[2].owner..", "..region_data[2].region_name
+			region_text2 = region_text2.. "Owner: "..region_data[2].owner..", "..region_data[2].region_name
 			
 			form = form.."label[0,"..line.l2..";"..region_text2.."]"
 			if  active_region == 2 and (can_modify.is_owner or can_modify.admin) then
@@ -373,11 +392,11 @@ function rac:guide(player,do_this)
 			end
 		end
 		if #region_id > 2 then
-			region_text3 = "ID: "..region_id[3]
+			region_text3 = "ID "..region_id[3]..": "
 			if can_modify.admin then
-				region_text3 = region_text3.. " ( "..rac:get_stacked_zone_as_string(region_id[3])..") "	
+				region_text3 = region_text3.. " > "..rac:get_stacked_zone_as_string(region_id[3]).." <\n "	
 			end
-			region_text3 = region_text3.. ", Owner: "..region_data[3].owner..", "..region_data[3].region_name
+			region_text3 = region_text3.. "Owner: "..region_data[3].owner..", "..region_data[3].region_name
 			
 			form = form.."label[0,"..line.l3..";"..region_text3.."]"
 			if  active_region == 3 and (can_modify.is_owner or can_modify.admin) then
