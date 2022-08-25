@@ -167,6 +167,7 @@ rac = {
 
 	-- init command_players for chatcommands
 	command_players = {},
+	compass_players =  {},
 	marker_modify_height = 2, -- falls bei setzen mit markern die Höhe nicht stimmt, halber minimum-Wert
 	marker1 = {},		-- for placing edges-boxes 
 	marker2 = {},		-- for placing edges-boxes 
@@ -174,10 +175,12 @@ rac = {
 	
 --	list_of_marker = {}, -- die Table für die Marker
 --	marker_verify_timer = 10, -- prüfe alle X sekunden - default 300 Sekunden = 5 Minuten
---	marker_timer = 0,
---	marker_delete_time = 600, -- nach 10 minuten löschen sich die Marker selbständig 
+	marker_delete_time = 16, -- nach 600  -> 10 minuten löschen sich die Marker selbständig 
 }
 
+--rac.compass_players = { adownad = {} }
+--rac.compass_players["adownad"].active = true
+--rac.compass_players["adownad"].region_id = 1
 -----------------------------------
 -- load some .luas
 -----------------------------------

@@ -335,6 +335,7 @@ function rac:command_show(header, name,list_start,list_end)
 --	local pos1 = ""
 --	local pos2 = ""
 --	local data = ""
+	local stacked_zone = ""
 	local chat_string = ""
 	local chat_string_start = "### List of Regions ###"
 	if header == false or header == "status" then
@@ -391,7 +392,8 @@ function rac:command_show(header, name,list_start,list_end)
 				-- baue die Ausgaben zusammen
 				-- was soll da rein?
 				-- id, playername, Name der Region, pvp, mpv?
-				chat_string = chat_string.."\n ID: "..tostring(counter).." "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp)
+				stacked_zone = rac:get_stacked_zone_as_string(counter)
+				chat_string = chat_string.."\n ID: "..tostring(counter).." "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp).." Zonen: "..stacked_zone
 			end 
 		end -- if counter <= stop_list or stop_list < 0 then
 		counter = counter + 1
@@ -690,9 +692,13 @@ function rac:command_set(param, name)
 			rac:msg_handling(65,func_name) -- [65] = "ERROR: func: command_set  - Pos2 fehlt",
 			return 65
 		elseif string.len(region_name) < 1 then
-			minetest.chat_send_player(name, "please set a name behind set, use \"/region set {region_name}\" to set.")
+			minetest.chat_send_player(name, "Region_name zu kurz!")
 			rac:msg_handling(66,func_name) -- [66] = "ERROR: func: command_set  - region_name zu kurz",
 			return 66
+		elseif string.len(region_name) > 20 then
+			minetest.chat_send_player(name, "Region_name zu lang!")
+			rac:msg_handling(71,func_name) -- [71] = "ERROR: func: command_set - region_name zu lang!",
+			return 71		
 		end
 		-- Prüfung, darf man hier setzen?
 		-- Darf der Spieler oder der Admin hier etwas setzen?
@@ -738,7 +744,7 @@ function rac:command_set(param, name)
 		-- prüfe Spieler
 		if zone_table.player then
 			-- falls keine Plot_id übergeben wurde
-			if zone_table.plot_id == false then
+			if zone_table.plot_id == nil then
 				-- erzeuge den datastring
 				claimable = false
 				-- rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
@@ -751,9 +757,16 @@ function rac:command_set(param, name)
 					rac:set_region(rac.command_players[name].pos1,rac.command_players[name].pos2,region_data_string)
 					minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< angelegt!")
 				end
-			else -- if zone_table.plot_id == false then
+			end -- if zone_table.plot_id == false then
+			if type(zone_table.plot_id) == "number" then
 				-- überschreibe die Region mit der ID zone_table.plot_id an den Player
-				err = rac:command_change_owner(zone_table.plot_id.." "..name, name, true)
+				-- muss man handisch machen, da der player nicht admin ist!
+				local by_function = true
+				--err = rac:command_change_owner(zone_table.plot_id.." "..name, name, true,by_function)
+				--rac:region_set_attribute(name, id, region_attribute, value, bool,by_function)
+				err = rac:region_set_attribute(name, zone_table.plot_id, "owner", name, false,by_function)
+				--err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect)
+				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err = "..tostring(err)	)
 				if err == 0 then
 					-- Player ist owner der Region
 					-- passe zone an 				zone = owned
@@ -761,7 +774,8 @@ function rac:command_set(param, name)
 					if err == 0 then			
 						-- passe claimable an		claimable = false
 						err = rac:region_set_attribute(name, zone_table.plot_id, "claimable", false)
-						inetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< in Besitz genommen!")
+						err = rac:region_set_attribute(name, zone_table.plot_id, "protected", true)
+						minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< in Besitz genommen!")
 					end
 				end
 				return err								
@@ -793,6 +807,57 @@ function rac:command_set(param, name)
 	end -- if can_modify.admin or can_modify.set then	
 end
 
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:command_compass(param, name)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- aktiviere den Compass zur Region
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- return:
+--	0			wenn ferig
+--	err 	wenn rac:get_region_data_by_id(region_id) einen error liefert
+--	74			[74] = "ERROR: func: command_compass - keine ID übergeben!",
+--
+-- msg/error handling: no
+function rac:command_compass(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_compass"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - param: "..tostring(param)	)
+	local region_id = param:sub(8, -1)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - number: "..tostring(region_id)	)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	region_id = tonumber(region_id)
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	if region_id == nil then
+		minetest.chat_send_player(name, "compass hat keine ID übergeben bekommen!")
+		return 74 -- 		[74] = "ERROR: func: command_compass - keine ID übergeben!",
+	end
+	
+	-- gibt es diese Regions ID
+	local err,pos1, pos2, data = rac:get_region_data_by_id(region_id)
+	if err ~= 0 then
+		rac:msg_handling(err,func_name)
+	else
+		if rac.compass_players[name] == nil then
+			rac.compass_players[name] = { name = {} }
+		end
+		rac.compass_players[name] = {
+			active = true,
+			region_id = region_id,
+			}
+	end
+	return err
+end
 
 -----------------------------------------
 --

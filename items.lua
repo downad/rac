@@ -54,14 +54,17 @@ minetest.register_node("rac:mark", {
         	-- die marker verschwinden dann
           --markers.marker_placed( pos, placer, itemstack );
           rac:marker_placed( pos, placer, itemstack )
-					minetest.after(16,function()
-						minetest.set_node(pos, {name="air"})
-					end)
+					
+--					minetest.get_node_timer(pos):start(rac.marker_delete_time)
+					minetest.get_node_timer(pos):start(16)
         end,
 
---				on_timer = function(pos, elapsed)
---					
---				end,
+				on_timer = function(pos, elapsed)
+					--minetest.after(16,function()
+						minetest.remove_node(pos)
+						minetest.set_node(pos, {name="air"})
+					--end)
+				end,
         -- the node is digged immediately, so we may as well do all the work in can_dig (any wrong digs are not that critical)
  --       can_dig = function(pos,player)
  --      	-- nur der owner kann abbauen
@@ -198,8 +201,7 @@ minetest.register_entity("rac:showarea_owned",{
 	}
 })
 
---[[
-minetest.register_entity("rac:showarea",{
+minetest.register_entity("rac:showarea_default",{
 	on_activate = function(self, staticdata, dtime_s)
 		minetest.after(16,function()
 			self.object:remove()
@@ -212,16 +214,16 @@ minetest.register_entity("rac:showarea",{
 		visual = "mesh",
 		mesh = "landrush_showarea.x",
 		textures = {nil, nil, "landrush_showarea.png", "landrush_showarea.png", "landrush_showarea.png", "landrush_showarea.png"}, -- number of required textures depends on visual
-		colors = {2}, -- number of required colors depends on visual
+		colors = {}, -- number of required colors depends on visual
 		spritediv = {x=1, y=1},
 		initial_sprite_basepos = {x=0, y=0},
 		is_visible = true,
 		makes_footstep_sound = false,
---		automatic_rotate = false,
+		automatic_rotate = 0,
 	}
 })
 
-]]--
+
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
 -- entity rac:pos1

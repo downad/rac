@@ -66,11 +66,11 @@ rac.area_names = {
 	
 -- diese Texte werden im hud angezeigt
 rac.zone_text = {
-		none = "none",					-- default: none
-		outback = "outback",		-- default: outback
-		city = "city",					-- default: city
-		plot =  "plot",					-- default: plot
-		owned = "owned", 				-- default: owned
+		none = "-",					-- default: none
+		outback = "Umland",		-- default: outback
+		city = "Stadt",					-- default: city
+		plot =  "Bauplatz",					-- default: plot
+		owned = "besetzt", 				-- default: owned
 }	
 
 -- Standarthöhe von Regionen

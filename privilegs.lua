@@ -92,6 +92,8 @@ minetest.register_chatcommand("region", {
 			end
 		elseif param:sub(1, 6) == "border" then		-- 'end' if param == 
 			err = rac:command_border(param, name)
+		elseif param:sub(1, 7) == "compass" then		-- 'end' if param == 
+			err = rac:command_compass(param, name)
 		elseif param == "export" then 			-- 'end' if param == 
 			-- check privileg region_admin
 			if not minetest.check_player_privs(name, { region_admin = true }) then 
