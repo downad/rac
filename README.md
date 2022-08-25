@@ -119,6 +119,7 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 + 'region show'					admin: zeigt eine Liste aller Regoinen mit ID, Region_Name, Owner, pvp und mvp Status
 + 'region show {id}'		admin: zeigt die Region mit dieser ID mit ID, Region_Name, Owner, pvp und mvp Status
 + 'region show {name}'	admin: zeigt die Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status
++ 'region compass {id}'	admin: hilft beim finden dieser ID am Ziel kommt ein 'region border {id}' 
 
 
 

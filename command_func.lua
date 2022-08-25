@@ -824,7 +824,7 @@ end
 --	0			wenn ferig
 --	err 	wenn rac:get_region_data_by_id(region_id) einen error liefert
 --	74			[74] = "ERROR: func: command_compass - keine ID übergeben!",
---
+--	75			[75] = "ERROR: func: command_compass - Dir fehlt das Privileg region_admin!",
 -- msg/error handling: no
 function rac:command_compass(param, name)
 	local func_version = "1.0.0"
@@ -832,6 +832,17 @@ function rac:command_compass(param, name)
 	if rac.show_func_version and rac.debug_level > 0 then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
+	local player = minetest.get_player_by_name(name)
+	if not player then 
+		return 43 -- [43] = "ERROR: func: rac:command_set - kein Spieler mit dem Namen gefunden",
+	end 
+	
+	local can_modify = rac:player_can_modify_region_id(player)
+	if not can_modify.admin then
+		minetest.chat_send_player(name, "Dir fehlt das Privileg region_admin!")
+		return 75 -- 		[75] = "ERROR: func: command_compass - Dir fehlt das Privileg region_admin!",
+	end
+	
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - param: "..tostring(param)	)
 	local region_id = param:sub(8, -1)
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - number: "..tostring(region_id)	)
