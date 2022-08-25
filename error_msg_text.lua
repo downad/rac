@@ -84,5 +84,6 @@ rac.error_msg_text = {
 		[72] = "ERROR: func: can_player_set_region - Bezeichner Zone1 ist gleich Zone2.",
 		[73] = "ERROR: func: can_player_set_region - Mehr als 2 Zonen überlappen.",
 		[74] = "ERROR: func: command_compass - keine ID übergeben!",
+		[75] = "ERROR: func: command_compass - Dir fehlt das Privileg region_admin!",
 		
 	}
