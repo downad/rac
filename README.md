@@ -83,7 +83,7 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 ## Versions
 - start Juni 2022 
 - v 0.8 - ein Großteil von raz ist umgeschrieben. Player kann Rac-Guide-Guid-Book nutzen.
-- v 0.9 - Rac-Guide-Guid-Book für admin, Regionen stapelbar -> outback, city, plot 
+- v 0.9 - Rac-Guide-Guid-Book für admin, Regionen stapelbar -> outback, city, plot, owned
 - v 1.0 - Mobdamage je Zone, Key für Plot
  
 
@@ -108,18 +108,50 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 + -	admin: Der Admin kann alles
 
 ## Commands
+### all Players
 + 'region help'					all: verweist auf 'help region' und zeigt die verwendeten ChatCommands. 
 + 'region help {command} - eine Kurzbeschreibung wie das Command funktioniert
 + 'region guide' 				all: ruft den rac-guide zur Verwaltung der Regionen auf. 
++ 'region status'				all: zeigt wichtige Infos zur Rgion an dieser Position. 
+### mit Privileg 'region_set'
++ 'region own'					all: zeigt die Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status 
++ 'region pos1'					Player mit 'region_set'/'region_admin': Setzte die erste Ecke einer möglichen neuen Region
++ 'region pos2'					Player mit 'region_set'/'region_admin': Setzte die zweite Ecke einer möglichen neuen Region
++ 'region set {name}'		Player mit 'region_set'/'region_admin': Lege eine Region mit {name} an. DAvor mus pos1 und pos2 gesetz werden
++ 'region max_y {id}'				Player mit 'region_set'/'region_admin': Setze die Region auf max Höhe, 1/3 nach unten, 2/3 nach oben
 + 'region border' 			Player: zeigt die Grenzen der eigenen Region an dieser Pos an
-+ 'region border' 			admin: zeigt alle Regionen an dieser Pos an, outback,city,plot/owned wird unterschiedlich angezeigt. 
-+	'region border {id}'	admin: zeigt die Region mit der ID an
-+ 'region export'				admin: exportiert die Regionen als Datei <rac.export_file_name> ins world-Verzeichnis
-+ 'region import'				admin: importiert die Regionen aus der Datei <rac.export_file_name> vom world-Verzeichnis
++ 'region change_owner {id} {player}'		Player mit 'region_set'/'region_admin': übertrage die Region {id} an [player}
+
+
+### für den admin - Privileg 'region_dmin'
++ 'region max_y {val}'	admin: Setze die Region auf {val} Höhe, 1/3 nach unten, 2/3 nach oben
 + 'region show'					admin: zeigt eine Liste aller Regoinen mit ID, Region_Name, Owner, pvp und mvp Status
 + 'region show {id}'		admin: zeigt die Region mit dieser ID mit ID, Region_Name, Owner, pvp und mvp Status
 + 'region show {name}'	admin: zeigt die Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status
++ 'region border' 			admin: zeigt alle Regionen an dieser Pos an, outback,city,plot/owned wird unterschiedlich angezeigt. 
++	'region border {id}'	admin: zeigt die Region mit der ID an
 + 'region compass {id}'	admin: hilft beim finden dieser ID am Ziel kommt ein 'region border {id}' 
++ 'region export'				admin: exportiert die Regionen als Datei <rac.export_file_name> ins world-Verzeichnis
++ 'region import'				admin: importiert die Regionen aus der Datei <rac.export_file_name> vom world-Verzeichnis
++ 'region player {player}'	admin: zeigt die Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status
++ 'region remove {id}'	admin: löscht die Region mit der {id}
++ 'region remove all'		admin: löscht ALLE Regionen 
++ 'region list'					admin: zeigt eine Liste aller Regionen, sortiert nach outback,city,..
++ 'region list full'		admin: zeigt zu jeder Region noch: zone, owner, name, claimable,protected, guests, pvp, mvp, effect 
++ 'region max_y {id} {neue Höhe}'				Player mit 'region_set'/'region_admin': Setze die Region auf max Höhe, 1/3 nach unten, 2/3 nach oben. Der Standard kann überschreiben werden.
++ 'region pvp {id} {true/false}'		admin: setzt pvp der Region [id} auf true oder false
++ 'region mvp {id} {true/false}'		admin: setzt mvp (den Monsterschaden) der Region [id} auf true oder false
++ 'region claimable {id} {true/false}'		admin: setzt claimable der Region [id} auf true oder false
++ 'region protect {id} {true/false}'		admin: setzt protected der Region [id} auf true oder false
++ 'region effect {id} {effect} {add/delete}'		admin: aktiviert oder deaktiviert einen Effect auf einer Region
++ 'region change_zone {id} {zone}'		admin: setzt die Zone der {id} auf {zone}
++ 'region rename {id} {neuer Name}'		admin: Benennt die Region {id} um, auf {neuer Name}
++ 'region set_min {id} {x,y,z}'		admin: Setzte die Min-Ecke der Region auf x,y,z
++ 'region set_max {id} {x,y,z}'		admin: Setzte die Max-Ecke der Region auf x,y,z
+
+ 
+
+
 
 
 

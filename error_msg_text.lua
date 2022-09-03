@@ -8,7 +8,7 @@
 	--		ERROR: 	-> Ausgabe in minetest.log
 	--		Info:		-> Ausgabe in minetest.log
 	--		msg: 		-> Ausgabe erfolgt nur an den Spieler
-rac.max_error = 74
+rac.max_error = 100
 rac.error_msg_text = {
 		[1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
 		[2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
@@ -22,7 +22,7 @@ rac.error_msg_text = {
 		[10] = "ERROR: func: rac:create_data_string - no guests set! ",
 		[11] = "ERROR: func: rac:create_data_string - no pvp set! ",
 		[12] = "ERROR: func: rac:create_data_string - no mvp - Monsterdamage set! ",
-		[13] = "ERROR: func: rac:create_data_string - effect ist nichtt in der Liste! "..tostring(rac.allowed_effects),
+		[13] = "ERROR: func: rac:create_data_string - effect ist nicht in der Liste! "..tostring(rac.allowed_effects),
 		[14] = "ERROR: func: rac:create_data_string - no effect set! ",
 		[15] = "ERROR: func: rac:set_region - übergebenes 'data' war weder table noch string!!!",
 		[16] = "ERROR: func: rac:get_region_data_by_id - no region with this ID!",
@@ -85,5 +85,30 @@ rac.error_msg_text = {
 		[73] = "ERROR: func: can_player_set_region - Mehr als 2 Zonen überlappen.",
 		[74] = "ERROR: func: command_compass - keine ID übergeben!",
 		[75] = "ERROR: func: command_compass - Dir fehlt das Privileg region_admin!",
-		
+		[76] = "ERROR: func: register_globalstep - keine ID gesetzt",
+		[77] = "ERROR: func: rac:command_player_regions - Dir fehlt das Privileg 'region_admin'!",
+		[78] = "ERROR: func: rac:command_player_regions - There is no Player with this name!",
+		[79] = "info: func: rac:command_max_y - Keine ID angegeben. '/region max_y ID'",
+		[80] = "info: func: rac:command_max_y - Du bist nicht der Besitzer",
+		[81] = "info: func: rac:command_max_y - keine Admin-Berechtigung",
+		[82] = "info: func: rac:command_max_y - Diese Region hat schon die maximale Höhe!",
+		[83] = "info: func: rac:command_max_y - Diese Region kann nicht so hoch / tief werden!",
+		[84] = "info: func: rac:regions_by_zone - keine Admin-Berechtigung",
+		[85] = "info: func: rac:command_pvp - keine Admin-Berechtigung",
+		[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
+		[87] = "info: func: rac:command_mvp - keine Admin-Berechtigung",
+		[88] = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help mvp\" für mehr Informationen.",
+		[89] = "info: func: rac:command_claimable - keine Admin-Berechtigung",
+		[90] = "info: func: rac:command_claimable - Falscher Aufruf des Command 'region claimable' Tippe \"/region help claimable\" für mehr Informationen.",
+		[91] = "info: func: rac:command_protected - keine Admin-Berechtigung",
+		[92] = "info: func: rac:command_protected - Falscher Aufruf des Command 'region protected' Tippe \"/region help protected\" für mehr Informationen.",
+		[93] = "info: func: rac:command_effect - keine Admin-Berechtigung",
+		[94] = "info: func: rac:command_effect - Falscher Aufruf des Command 'region effect' Tippe \"/region help effect\" für mehr Informationen.",
+		[95] = "info: func: rac:command_change_zone - keine Admin-Berechtigung",
+		[96] = "info: func: rac:command_change_zone - Falscher Aufruf des Command 'region effect' Tippe \"/region help change_zone\" für mehr Informationen.",
+		[97] = "info: func: rac:command_rename - keine Admin-Berechtigung",
+		[98] = "info: func: rac:command_rename - Falscher Aufruf des Command 'region effect' Tippe \"/region help rename\" für mehr Informationen.",
+		[99] = "info: func: rac:command_own - keine Admin-Berechtigung",
+		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
+
 	}

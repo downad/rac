@@ -56,7 +56,7 @@ minetest.register_node("rac:mark", {
           rac:marker_placed( pos, placer, itemstack )
 					
 --					minetest.get_node_timer(pos):start(rac.marker_delete_time)
-					minetest.get_node_timer(pos):start(16)
+					minetest.get_node_timer(pos):start(16,0)
         end,
 
 				on_timer = function(pos, elapsed)

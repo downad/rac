@@ -142,8 +142,8 @@ function rac:get_direction_to_region(region_id,player)
 	local func_name = "rac:get_direction_to_region"
 	if rac.show_func_version and rac.debug_level > 4 then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)
 	end
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)
 	local position = vector.round(player:get_pos())
 	local return_string = "keine Region gefunden"
 	local err,pos1, pos2, data = rac:get_region_data_by_id(region_id)
@@ -195,18 +195,41 @@ function rac:get_direction_to_region(region_id,player)
 
 	-- bin ich schon da?
 	err,check_region_id = rac:get_region_at_pos(position)
+	-- err = nil / 0 / err
 --	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> err: "..tostring(err)	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> check_region_id: "..tostring(check_region_id)	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> #check_region_id: "..tostring(#check_region_id)	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> check_region_id[1]: "..tostring(check_region_id[1])	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> type(check_region_id[1]): "..tostring(type(check_region_id[1]))	)
+	-- keine Region gefunden
 	if err ~= nil then
-		if rac:string_in_table(region_id, check_region_id) then 
-			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - id in given Table: "	)
-			-- ziel erreicht
-			return_string = "OK"
-		end
-		
-	else-- if err ~= nil then
-		if m > (-math.pi/2)  and m < (math.pi/2) then
+		if err == 0 then -- eine / mehrere Regionen gefunden
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> in err ~= 0"	)
+			for key,value in ipairs(check_region_id) do
+--				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> key: "..tostring(key)	)
+--				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> value: "..tostring(value)	)
+--				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> region_id: "..tostring(region_id)	)
+				if value == region_id then 
+					minetest.log("action", "[" .. rac.modname .. "] "..func_name.." -  \n value == region_id \n Ziel erreicht \n"	)
+					-- ziel erreicht
+					return_string = "OK"
+				else
+--						minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> in err ~= 0 / region_id nicht in table"	)
+--						minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac:get_region_at_pos(position -> region_id: "..tostring(region_id)	)
+				end
+			end
+		end	
+	else
+		-- err nil muss zu err = 0!
+		err = 0		
+	end
+	
+	if err == 0 and return_string ~= "OK" then -- err > 0 ein Fehler
+	-- bau den Retrunstring
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - in der else, noch nicht am Ziel: "..tostring(m)	)
+		if m > (-math.pi/2)  and m <= (math.pi/2) then
 			compass = "rechts von dir"
-		elseif m < (-math.pi/2) or m > (math.pi/2) then
+		elseif m <= (-math.pi/2) or m > (math.pi/2) then
 			compass = "links von dir"
 		else
 			compass = "gerade aus"
@@ -233,43 +256,32 @@ end
 --  color
 --
 -- msg/error handling: no	
-function rac:get_color_for_region_text(zone,is_protected)	
+function rac:get_color_for_region_text(zone)	
 	local func_version = "1.0.0"
 	if rac.show_func_version and rac.debug_level > 8 then
 		minetest.log("action", "[" .. rac.modname .. "] rac:get_color_for_region_text - Version: "..tostring(func_version)	)
 	end
 	local color
 	-- only for debugging
-	if rac.debug == true and rac.debug_level > 0 then
+	if rac.debug == true and rac.debug_level > 4 then
 		minetest.log("action", "[" .. rac.modname .. "] ***********************************************")
 		minetest.log("action", "[" .. rac.modname .. "] zone: "..tostring(zone))
 		minetest.log("action", "[" .. rac.modname .. "] is_protected: "..tostring(is_protected))
 	end
-	if zone=="outback" or zone=="city" then
-		if is_protected then
-		 color = rac.color["orange"]
-		else
-		 color = rac.color["yellow"]
-		end
-	elseif zone == "plot" or zone == "owned" then
-		if is_protected then
-			color = rac.color["crimson"]
-		else
-			 color = rac.color["white"]
-		end
-	elseif zone == rac.wilderness.zone then
-		if is_protected then
-			color = rac.color["red"]
-		else
-			color = rac.color["magenta"]
-		end
-	else
-		if is_protected then
-			 color = rac.color["purple"]
-		else
-			 color = rac.color["blue"]
-		end
+	if zone=="outback"  then
+	 color = rac.color["orange"]
+	elseif zone=="city" then
+		color = rac.color["yellow"]
+	elseif zone == "plot"  then
+		color = rac.color["magenta"]
+	elseif zone == "owned" then
+		color = rac.color["white"]
+	else -- alles was nicht abgedeckt ist
+		-- wilderness, none,....
+	 color = rac.color["purple"]
+	 color = rac.color.crimson
 	end
+--	minetest.log("action", "[" .. rac.modname .. "] color: "..tostring(color))
 	return color
 end
 

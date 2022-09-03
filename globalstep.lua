@@ -76,7 +76,7 @@ minetest.register_globalstep(function(dtime)
 		owned = nil,
 	}	
 	local set_stacked_zone = function (string, value)	
---		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - set_stacked_zone string = "..tostring(string).." value = "..tostring(value)	)	
+----		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - set_stacked_zone string = "..tostring(string).." value = "..tostring(value)	)	
 		-- keine Prüfung von string und value
 		if string == "owned" then 
 			stacked_zone.owned = value
@@ -110,7 +110,7 @@ minetest.register_globalstep(function(dtime)
 		
 		if region_id == nil then
 			-- es gibt keine Region, nutze den wilderness Werte protected
-			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - if region_id == nil then: - Wildniss")	
+--	--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - if region_id == nil then: - Wildniss")	
 			zone = rac.wilderness.zone
 			-- erzeuge den hud_string
 			region_name = rac.wilderness.text_wilderness
@@ -136,13 +136,15 @@ minetest.register_globalstep(function(dtime)
 			
 			is_protected = false
 			for key, id in pairs(region_id) do
---				minetest.log("action", "[" .. rac.modname .. "] rac:guide - key: "..tostring(key).." id = "..tostring(id)	)
---				minetest.log("action", "[" .. rac.modname .. "] rac:guide - type(id) = "..tostring(type(id))	)
+		--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - key: "..tostring(key).." id = "..tostring(id)	)
+		--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(id) = "..tostring(type(id))	)
 
 				err,data_table = rac:get_region_datatable(id)
 				set_stacked_zone(data_table.zone,id)
---				minetest.log("action", "[" .. rac.modname .. "] rac:guide - data_table.zone = "..tostring(data_table.zone)	)
+		--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - data_table.zone = "..tostring(data_table.zone)	)
+		--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err = "..tostring(err)	)
 			end
+			this_zone_counts = nil
 			if stacked_zone.outback ~= nil then
 				this_zone_counts = stacked_zone.outback
 			end
@@ -156,8 +158,17 @@ minetest.register_globalstep(function(dtime)
 				this_zone_counts = stacked_zone.owned
 			end
 			
+			-- wenn eine this_zone_counts gesetzt wurde
 			-- hole data von Region this_zone_counts
-			err,data_table1 = rac:get_region_datatable(this_zone_counts) 
+	--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - this_zone_counts = "..tostring(this_zone_counts)	)
+			if this_zone_counts ~=nil then
+				err,data_table1 = rac:get_region_datatable(this_zone_counts) 
+			else
+				err = 76 --		[76] = "ERROR: func: register_globalstep - keine ID gesetzt",
+				rac:msg_handling(err,func_name)
+				err,data_table1 = rac:get_region_datatable(region_id[1]) 
+			end
+			-- ohne Fehler, dann fülle die Werde
 			if err == 0 then
 				zone = data_table1.zone
 				-- hole den ersten owner
@@ -182,7 +193,7 @@ minetest.register_globalstep(function(dtime)
 					effect1 = data_table1.effect
 				end
 			else
-				-- err hat einen Fehler gemeldet
+			-- err hat einen Fehler gemeldet
 			rac:msg_handling(err,func_name)
 			end
 			
@@ -199,54 +210,58 @@ minetest.register_globalstep(function(dtime)
 
 
 		-- baue den hud - String
-		-- wenn #region_id > 1
+		-- wenn #region_id > 1,
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id = "..tostring(region_id)	)
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #region_id = "..tostring(#region_id)	)
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id[1] = "..tostring(region_id[1])	)
+
 		if region_id ~= nil then
-			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." if region_id ~= nil then")
+--	--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." if region_id ~= nil then")
 			if is_protected then
 				protected_string = rac.wilderness.text_protected
 			else
 				protected_string = ""
 			end 
 			if plot_owner ~= nil  then
-				minetest.log("action", "[" .. rac.modname .. "] if plot_owner ~= : "..tostring(plot_owner))
+--		--		minetest.log("action", "[" .. rac.modname .. "] if plot_owner ~= : "..tostring(plot_owner))
 				owner = plot_owner
 				hud_string = region_name .." "..protected_string.."\n"
 			else
 				owner = city_owner
-				hud_string = region_name .." "..protected_string.."\n"..owner
+				hud_string = region_name .." "..protected_string.."\n".."Diese Region gehört: "..owner
 			end
 
 			-- is pvp allowed in this region
 			-- UND ist enable_pvp in der minetest.conf gesetzt
 			if rac.enable_pvp then
 				if is_pvp_allowed  then
-					hud_string = hud_string .." "..rac.wilderness.text_pvp 
+					hud_string = hud_string .."\n"..rac.wilderness.text_pvp 
 				end			
 			else
-				hud_string = hud_string .."Das PvP ist ausgeschaltet!"
+				hud_string = hud_string .."\nDas PvP ist ausgeschaltet!"
 			end
 		end		
 		
 				-- only for debugging
-		if rac.debug == true and rac.debug_level > 0 then
-			minetest.log("action", "[" .. rac.modname .. "] *************baue den hud - String*************")
-			minetest.log("action", "[" .. rac.modname .. "] this_zone_counts: "..tostring(this_zone_counts))
-			minetest.log("action", "[" .. rac.modname .. "] protected_string: "..tostring(protected_string))
-			minetest.log("action", "[" .. rac.modname .. "] region_name: "..tostring(region_name))
-			minetest.log("action", "[" .. rac.modname .. "] owner: "..tostring(owner))
-			minetest.log("action", "[" .. rac.modname .. "] rac.enable_pvp: "..tostring(rac.enable_pvp))
-			minetest.log("action", "[" .. rac.modname .. "] is_pvp_allowed: "..tostring(is_pvp_allowed))
-			minetest.log("action", "[" .. rac.modname .. "] zone: "..tostring(zone))
-			minetest.log("action", "[" .. rac.modname .. "] hud_string: "..tostring(hud_string))
+		if rac.debug == true and rac.debug_level > 4 then
+	--		minetest.log("action", "[" .. rac.modname .. "] *************baue den hud - String*************")
+	--		minetest.log("action", "[" .. rac.modname .. "] this_zone_counts: "..tostring(this_zone_counts))
+	--		minetest.log("action", "[" .. rac.modname .. "] protected_string: "..tostring(protected_string))
+	--		minetest.log("action", "[" .. rac.modname .. "] region_name: "..tostring(region_name))
+	--		minetest.log("action", "[" .. rac.modname .. "] owner: "..tostring(owner))
+	--		minetest.log("action", "[" .. rac.modname .. "] rac.enable_pvp: "..tostring(rac.enable_pvp))
+	--		minetest.log("action", "[" .. rac.modname .. "] is_pvp_allowed: "..tostring(is_pvp_allowed))
+	--		minetest.log("action", "[" .. rac.modname .. "] zone: "..tostring(zone))
+	--		minetest.log("action", "[" .. rac.modname .. "] hud_string: "..tostring(hud_string))
 		end
 		
 		-- ermittle die Farbe und update das hud
 		--rac:get_color_for_region_text(zone,is_protected)	
-		color = rac:get_color_for_region_text(zone,is_protected)	
+		color = rac:get_color_for_region_text(zone)	
 		-- only for debugging
 		if rac.debug == true and rac.debug_level == 10 then
-			minetest.log("action", "[" .. rac.modname .. "] *************Color und hud *************")
-			minetest.log("action", "[" .. rac.modname .. "] color: "..tostring(color))
+	--		minetest.log("action", "[" .. rac.modname .. "] *************Color und hud *************")
+	--		minetest.log("action", "[" .. rac.modname .. "] color: "..tostring(color))
 		end
 		rac:update_hud(player,hud_string, color)
 	

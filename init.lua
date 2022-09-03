@@ -112,9 +112,15 @@ rac = {
 	minimum_width = 2,			-- the smalest region for player is a square of 3 x 3
 	minimum_height = 4,			-- the minimum heigh is 4 
 	maximum_width = 100,		-- for player
-	maximum_height = 60,			-- for player
 	landrush_width = 16,			-- if a landrush module will be created
 	landrush_height = 16,			-- if a landrush module will be created
+	maximum_height = {
+		owned = 60,		-- for player
+		plot = 60,			-- for player
+		city = 100,		-- admin
+		outback = 150,	-- admin
+		none = 0,
+	},
 
 	-- some values for the region effects
 	timer = 0,
@@ -146,21 +152,23 @@ rac = {
 	
 	-- init saved huds 
 	player_huds = {},
+	-- init player_guide
+	player_guide = {},
+	
 	-- some color for the hud
 	color = {
-		red = "0xFF0000",
-		orange = "0xFF8C00",
-		purple = "0x800080", 
-		yellow = "0xFFFF00",
-		blue = "0x0000FF",
- 		white = "0xFFFFFF",
-		magenta = "0xFF00FF",
-		crimson = "0xDC143C",
+		red = "0xFF0000", 				-- 					schlecht lesbar
+		orange = "0xFF8C00",			-- outback
+		purple = "0x800080", 			-- 
+		yellow = "0xFFFF00",			-- city
+		blue = "0x0000FF",				-- 					schlecht lesbar, besser als rot
+ 		white = "0xFFFFFF",				-- owned
+		magenta = "0xFF00FF",			-- plot
+		crimson = "0xDC143C",			-- wilderness/none
 	},
 
 	-- some more defaults
-	-- Speicherort für die Steuerung
-	player_guide = {},
+	region_order = { },
 	
 	-- global PvP in minetest.conf
 	enable_pvp = minetest.settings:get_bool("enable_pvp"),
@@ -173,8 +181,6 @@ rac = {
 	marker2 = {},		-- for placing edges-boxes 
 	set_command = {},	-- for punchnode function
 	
---	list_of_marker = {}, -- die Table für die Marker
---	marker_verify_timer = 10, -- prüfe alle X sekunden - default 300 Sekunden = 5 Minuten
 	marker_delete_time = 16, -- nach 600  -> 10 minuten löschen sich die Marker selbständig 
 }
 
@@ -226,6 +232,7 @@ dofile(rac.modpath.."/rac_guide.lua")
 -- check if region must be converted
 --err = rac:convert_region_to_version()
 --rac:msg_handling(err)
+
 
 minetest.log("action", "[" .. rac.modname .. "] Daten aus mintest.conf: enable_pvp = "..tostring(rac.enable_pvp))
 local serveradmin = minetest.settings:get("name")

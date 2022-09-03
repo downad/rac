@@ -63,11 +63,15 @@ rac.razguide = {
 		Button_19 = "delete",		 					-- Effekt löschen 
 		Button_20 = "claimable off",			-- claimable off
 		Button_21 = "claimable on",		 		-- claimable on
-		Button_22 = "change zone",		 		-- Change Zone
+		Button_22 = rac.zone_text.none,		-- Zone 'none'
 		Button_23 = "use",		 						-- Button Zeile 1
 		Button_24 = "use",		 						-- Button Zeile 2
 		Button_25 = "use",		 						-- Button Zeile 3 
 		Button_26 = "active",	 						-- Button Zeile 1-3 - activ 
+		Button_27 = rac.zone_text.outback,		-- Zone 'outback'
+		Button_28 = rac.zone_text.city,		-- Zone 'city'
+		Button_29 = rac.zone_text.plot,		-- Zone 'plot'
+		Button_30 = rac.zone_text.owned,		-- Zone 'owned'
 		
 	
 		
@@ -99,10 +103,16 @@ rac.line = {
 			b7 = 9.1,
 			l8 = 10.5,		-- verwalten: Gäste 
 			b8 = 10.2,
-			bcol1 = 7, 		-- Spalte Button eins
-			bcol2 = 8.4, 	-- Spalte Button zwei	
+			bcol1 = 0, 	-- Spalte Button eins	
+			bcol2 = 1.4, 		-- Spalte Button zwei
+			bcol3 = 2.8, 	-- Spalte Button drei	
+			bcol4 = 4.2, 		-- Spalte Button vier
+			bcol5 = 5.6, 	-- Spalte Button fünf	
+			bcol6 = 7, 		-- Spalte Button sechs
+			bcol7 = 8.4, 	-- Spalte Button sieben	
 			bl1	= 2.7, 		-- Länge: langer Button
 			bl2 = 1.3,		-- Länge: kurzer Button	
+			bl3 = 2.0,		-- Länge: mittlerer Button	
 			lin = 6.5,		-- Länge des Inputfeldes
 			bh = 1,				-- Höhe des Button / der Felder	
 		}
@@ -372,9 +382,9 @@ function rac:guide(player,do_this)
 			
 			form = form.."label[0,"..line.l1..";"..region_text1.."]"
 			if active_region == 1 and (can_modify.is_owner or can_modify.admin) then
-				form = form.."button["..line.bcol2..","..line.b1..";"..line.bl2..","..line.bh..";tab23;"..rac.razguide["Button_26"] .. "]"
+				form = form.."button["..line.bcol7..","..line.b1..";"..line.bl2..","..line.bh..";tab23;"..rac.razguide["Button_26"] .. "]"
 			else
-				form = form.."button["..line.bcol2..","..line.b1..";"..line.bl2..","..line.bh..";tab23;"..rac.razguide["Button_23"] .. "]"
+				form = form.."button["..line.bcol7..","..line.b1..";"..line.bl2..","..line.bh..";tab23;"..rac.razguide["Button_23"] .. "]"
 			end
 		end
 		if #region_id > 1 then
@@ -386,9 +396,9 @@ function rac:guide(player,do_this)
 			
 			form = form.."label[0,"..line.l2..";"..region_text2.."]"
 			if  active_region == 2 and (can_modify.is_owner or can_modify.admin) then
-				form = form.."button["..line.bcol2..","..line.b2..";"..line.bl2..","..line.bh..";tab24;"..rac.razguide["Button_26"] .. "]" 
+				form = form.."button["..line.bcol7..","..line.b2..";"..line.bl2..","..line.bh..";tab24;"..rac.razguide["Button_26"] .. "]" 
 			else
-				form = form.."button["..line.bcol2..","..line.b2..";"..line.bl2..","..line.bh..";tab24;"..rac.razguide["Button_24"] .. "]" 
+				form = form.."button["..line.bcol7..","..line.b2..";"..line.bl2..","..line.bh..";tab24;"..rac.razguide["Button_24"] .. "]" 
 			end
 		end
 		if #region_id > 2 then
@@ -400,9 +410,9 @@ function rac:guide(player,do_this)
 			
 			form = form.."label[0,"..line.l3..";"..region_text3.."]"
 			if  active_region == 3 and (can_modify.is_owner or can_modify.admin) then
-				form = form.."button["..line.bcol2..","..line.b3..";"..line.bl2..","..line.bh..";tab25;"..rac.razguide["Button_26"] .. "]" 
+				form = form.."button["..line.bcol7..","..line.b3..";"..line.bl2..","..line.bh..";tab25;"..rac.razguide["Button_26"] .. "]" 
 			else
-				form = form.."button["..line.bcol2..","..line.b3..";"..line.bl2..","..line.bh..";tab25;"..rac.razguide["Button_25"] .. "]"  
+				form = form.."button["..line.bcol7..","..line.b3..";"..line.bl2..","..line.bh..";tab25;"..rac.razguide["Button_25"] .. "]"  
 			end	
 		end
 		if (can_modify.is_owner or can_modify.admin) and do_this == 1  then
@@ -415,9 +425,9 @@ function rac:guide(player,do_this)
 			if can_modify.protected then
 				text_attribute = "Schutz/Protektion: Dieses Gebiet ist "
 				if region_data[active_region].protected then
-					form = form.."label[0,"..line.l4..";"..text_attribute.." geschützt!  ".."]".."button["..line.bcol1..","..line.b4..";"..line.bl1..","..line.bh..";tab7;" .. rac.razguide["Button_7"] .. "]" 
+					form = form.."label[0,"..line.l4..";"..text_attribute.." geschützt!  ".."]".."button["..line.bcol6..","..line.b4..";"..line.bl1..","..line.bh..";tab7;" .. rac.razguide["Button_7"] .. "]" 
 				else
-					form = form.."label[0,"..line.l4..";"..text_attribute.." ungeschützt.".."]".."button["..line.bcol1..","..line.b4..";"..line.bl1..","..line.bh..";tab8;" .. rac.razguide["Button_8"] .. "]" 
+					form = form.."label[0,"..line.l4..";"..text_attribute.." ungeschützt.".."]".."button["..line.bcol6..","..line.b4..";"..line.bl1..","..line.bh..";tab8;" .. rac.razguide["Button_8"] .. "]" 
 				end	
 			end
 					
@@ -425,28 +435,28 @@ function rac:guide(player,do_this)
 			-- Text und ein langer Button
 			if can_modify.rename_region then
 				text_attribute = "Name des Gebietes:"
-				form = form.."field[0.3,"..line.l5..";"..line.lin..","..line.bh..";rename;"..text_attribute..region_data[active_region].region_name..";]".."button["..line.bcol1..","..line.b5..";"..line.bl1..","..line.bh..";tab11;".. rac.razguide["Button_11"] .. "]" 
+				form = form.."field[0.3,"..line.l5..";"..line.lin..","..line.bh..";rename;"..text_attribute..region_data[active_region].region_name..";]".."button["..line.bcol6..","..line.b5..";"..line.bl1..","..line.bh..";tab11;".. rac.razguide["Button_11"] .. "]" 
 			end
 			
 			-- Spieler darf Region an andere übertragen
 			-- Text und ein langer Button
 			if can_modify.change_owner then
 				text_attribute = "Besitzer: "
-				form = form.."field[0.3,"..line.l6..";"..line.lin..","..line.bh..";change_owner;"..text_attribute..region_data[active_region].owner..";]".."button["..line.bcol1..","..line.b6..";"..line.bl1..","..line.bh..";tab16;".. rac.razguide["Button_16"] .. "]" 
+				form = form.."field[0.3,"..line.l6..";"..line.lin..","..line.bh..";change_owner;"..text_attribute..region_data[active_region].owner..";]".."button["..line.bcol6..","..line.b6..";"..line.bl1..","..line.bh..";tab16;".. rac.razguide["Button_16"] .. "]" 
 			end
 			
 			-- Spieler darf Region an andere übertragen
 			-- Text und ein langer Button
 			if can_modify.delete_region then
 				text_attribute = "VORSICHT: Region löschen! Region ID eingeben!"
-				form = form.."field[0.3,"..line.l7..";"..line.lin..","..line.bh..";delete_region;"..text_attribute..";]".."button["..line.bcol1..","..line.b7..";"..line.bl1..","..line.bh..";tab17;".. rac.razguide["Button_17"] .. "]" 
+				form = form.."field[0.3,"..line.l7..";"..line.lin..","..line.bh..";delete_region;"..text_attribute..";]".."button["..line.bcol6..","..line.b7..";"..line.bl1..","..line.bh..";tab17;".. rac.razguide["Button_17"] .. "]" 
 			end
 			
 			-- Spieler darf Gäste einladen oder bannen
 			-- Text und zwei kurze Button
 			if can_modify.guests then
 				text_attribute = "Gäste: "
-				form = form.."field[0.3,"..line.l8..";"..line.lin..","..line.bh..";guest;"..text_attribute..region_data[active_region].guests..";]".."button["..line.bcol1..","..line.b8..";"..line.bl2..","..line.bh..";tab9;".. rac.razguide["Button_9"] .. "]".."button["..line.bcol2..","..line.b8..";"..line.bl2..","..line.bh..";tab10;".. rac.razguide["Button_10"] .. "]" 
+				form = form.."field[0.3,"..line.l8..";"..line.lin..","..line.bh..";guest;"..text_attribute..region_data[active_region].guests..";]".."button["..line.bcol6..","..line.b8..";"..line.bl2..","..line.bh..";tab9;".. rac.razguide["Button_9"] .. "]".."button["..line.bcol7..","..line.b8..";"..line.bl2..","..line.bh..";tab10;".. rac.razguide["Button_10"] .. "]" 
 			end
 
 
@@ -468,9 +478,9 @@ function rac:guide(player,do_this)
 			if can_modify.pvp then
 				text_attribute = "PvP: "
 				if region_data[active_region].pvp then
-					form = form.."label[0,"..line.l4..";"..text_attribute.." erlaubt.".."]".."button["..line.bcol1..","..line.b4..";"..line.bl1..","..line.bh..";tab12;" .. rac.razguide["Button_12"] .. "]" 
+					form = form.."label[0,"..line.l4..";"..text_attribute.." erlaubt.".."]".."button["..line.bcol6..","..line.b4..";"..line.bl1..","..line.bh..";tab12;" .. rac.razguide["Button_12"] .. "]" 
 				else
-					form = form.."label[0,"..line.l4..";"..text_attribute.." verboten.".."]".."button["..line.bcol1..","..line.b4..";"..line.bl1..","..line.bh..";tab13;" .. rac.razguide["Button_13"] .. "]" 
+					form = form.."label[0,"..line.l4..";"..text_attribute.." verboten.".."]".."button["..line.bcol6..","..line.b4..";"..line.bl1..","..line.bh..";tab13;" .. rac.razguide["Button_13"] .. "]" 
 				end	
 			end
 					
@@ -479,9 +489,9 @@ function rac:guide(player,do_this)
 			text_attribute = "Monsterdamage: "
 			if can_modify.mvp then
 				if region_data[active_region].mvp then
-					form = form.."label[0,"..line.l5..";"..text_attribute.." erlaubt.".."]".."button["..line.bcol1..","..line.b5..";"..line.bl1..","..line.bh..";tab14;" .. rac.razguide["Button_14"] .. "]" 
+					form = form.."label[0,"..line.l5..";"..text_attribute.." erlaubt.".."]".."button["..line.bcol6..","..line.b5..";"..line.bl1..","..line.bh..";tab14;" .. rac.razguide["Button_14"] .. "]" 
 				else
-					form = form.."label[0,"..line.l5..";"..text_attribute.." verboten.".."]".."button["..line.bcol1..","..line.b5..";"..line.bl1..","..line.bh..";tab15;" .. rac.razguide["Button_15"] .. "]" 
+					form = form.."label[0,"..line.l5..";"..text_attribute.." verboten.".."]".."button["..line.bcol6..","..line.b5..";"..line.bl1..","..line.bh..";tab15;" .. rac.razguide["Button_15"] .. "]" 
 				end	
 			end		
 			
@@ -489,7 +499,7 @@ function rac:guide(player,do_this)
 			-- Text und zwei kurze Button
 			if can_modify.effect then
 				text_attribute = "Effekte: "
-				form = form.."field[0.3,"..line.l6..";"..line.lin..","..line.bh..";effect;"..text_attribute..region_data[active_region].effect..";]".."button["..line.bcol1..","..line.b6..";"..line.bl2..","..line.bh..";tab18;".. rac.razguide["Button_18"] .. "]".."button["..line.bcol2..","..line.b6..";"..line.bl2..","..line.bh..";tab19;".. rac.razguide["Button_19"] .. "]" 
+				form = form.."field[0.3,"..line.l6..";"..line.lin..","..line.bh..";effect;"..text_attribute..region_data[active_region].effect..";]".."button["..line.bcol6..","..line.b6..";"..line.bl2..","..line.bh..";tab18;".. rac.razguide["Button_18"] .. "]".."button["..line.bcol7..","..line.b6..";"..line.bl2..","..line.bh..";tab19;".. rac.razguide["Button_19"] .. "]" 
 			end
 	
 			
@@ -498,14 +508,23 @@ function rac:guide(player,do_this)
 			-- Text und ein langer Button
 			text_attribute = "Das Gebiet "
 			if region_data[active_region].claimable then
-				form = form.."label[0,"..line.l7..";"..text_attribute.." ist claimable.".."]".."button["..line.bcol1..","..line.b7..";"..line.bl1..","..line.bh..";tab20;" .. rac.razguide["Button_20"] .. "]" 
+				form = form.."label[0,"..line.l7..";"..text_attribute.." ist claimable.".."]".."button["..line.bcol6..","..line.b7..";"..line.bl1..","..line.bh..";tab20;".. rac.razguide["Button_20"].."]" 
 			else
-					form = form.."label[0,"..line.l7..";"..text_attribute.." kann nicht geclaimed werden".."]".."button["..line.bcol1..","..line.b7..";"..line.bl1..","..line.bh..";tab21;" .. rac.razguide["Button_21"] .. "]" 
+					form = form.."label[0,"..line.l7..";"..text_attribute.." kann nicht geclaimed werden".."]".."button["..line.bcol6..","..line.b7..";"..line.bl1..","..line.bh..";tab21;" .. rac.razguide["Button_21"] .. "]" 
 			end
 			-- zone
 			-- inputfield
 			text_attribute = "Eingestellte Zone: "
-				form = form.."field[0.3,"..line.l8..";"..line.lin..","..line.bh..";zone;"..text_attribute..region_data[active_region].zone..";]".."button["..line.bcol1..","..line.b8..";"..line.bl1..","..line.bh..";tab22;".. rac.razguide["Button_22"] .. "]"
+			form = form.."label[0,"..(line.l8-0.4)..";"..text_attribute.."\n"..rac.zone_text[region_data[active_region].zone].."]"..
+				"button["..line.bcol3..","..line.b8..";"..line.bl2..","..line.bh..";tab22;".. rac.razguide["Button_22"].."]"..
+				"button["..line.bcol4..","..line.b8..";"..line.bl2..","..line.bh..";tab27;".. rac.razguide["Button_27"].."]"..
+				"button["..line.bcol5..","..line.b8..";"..line.bl2..","..line.bh..";tab28;".. rac.razguide["Button_28"].."]"..
+				"button["..line.bcol6..","..line.b8..";"..line.bl2..","..line.bh..";tab29;".. rac.razguide["Button_29"].."]"..
+				"button["..line.bcol7..","..line.b8..";"..line.bl2..","..line.bh..";tab30;".. rac.razguide["Button_30"].."]"
+--				form = form.."field[0.3,"..line.l8..";"..line.lin..","..line.bh..";zone;"..text_attribute..region_data[active_region].zone..";]".."button["..line.bcol6..","..line.b8..";"..line.bl1..","..line.bh..";tab22;".. rac.razguide["Button_22"] .. "]"
+
+
+
 
 		end
 	end -- if region_id ~= 0 then
@@ -730,17 +749,17 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
 			rac:guide(player,2)
 		end	 	
 	 
- 		-- tab22 set zone / admin do_this = 2
+ 		-- tab22 set zone 'none' / admin do_this = 2
 		if pressed.tab22 then
 			-- pressed.change_owner beinhaltet den Name des Gast
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab22" )
-  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.zone) )
-	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[active_region]	, "zone", pressed.zone) 
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.tab22) )
+	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[active_region]	, "zone", "none") 
 			context.err = err
 			rac:guide(player,2)
 		end	
 		
-	 	-- tab23 bis tab24 setze die Aktive region_id
+	 	-- tab23 bis tab25 setze die Aktive region_id
 		if pressed.tab23 then 
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab23" )
 			context.active_region = 1
@@ -755,8 +774,44 @@ minetest.register_on_player_receive_fields(function(player, form, pressed)
   		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab25" )
 			context.active_region = 3
 			rac:guide(player,context.do_this)
+		end
+			
+		-- tab27 set zone 'outback' / admin do_this = 2
+		if pressed.tab27 then
+			-- pressed.change_owner beinhaltet den Name des Gast
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab27" )
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.tab27) )
+	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[active_region]	, "zone", "outback") 
+			context.err = err
+			rac:guide(player,2)
 		end	
-		
+		 -- tab28 set zone 'city' / admin do_this = 2
+		if pressed.tab28 then
+			-- pressed.change_owner beinhaltet den Name des Gast
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab28" )
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.tab28) )
+	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[active_region]	, "zone", "city") 
+			context.err = err
+			rac:guide(player,2)
+		end	
+		 -- tab29 set zone 'plot' / admin do_this = 2
+		if pressed.tab29 then
+			-- pressed.change_owner beinhaltet den Name des Gast
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab28" )
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.tab29) )
+	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[active_region]	, "zone", "plot") 
+			context.err = err
+			rac:guide(player,2)
+		end	
+		 -- tab30 set zone 'owned' / admin do_this = 2
+		if pressed.tab30 then
+			-- pressed.change_owner beinhaltet den Name des Gast
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.tab28" )
+  		minetest.log("action", "[" .. rac.modname .. "] rac:register_on_player_receive_fields: pressed.change_owner = "..tostring(pressed.tab30) )
+	 		err = rac:region_set_attribute(player:get_player_name(), context.region_id[active_region]	, "zone", "owned") 
+			context.err = err
+			rac:guide(player,2)
+		end			
 		-- Errorhandling!
 		if err ~= nil then
 			if err >  0 then

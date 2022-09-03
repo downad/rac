@@ -41,14 +41,6 @@ minetest.register_privilege("region_guests", "Can invite/ban guests.")
 minetest.register_privilege("region_set", "Can set, remove and rename own regions and protect and open them or change owner of own regions.")
 
 
-
- 
-
-
-
---- ausmisten!
--- ausmisten
-
 minetest.register_chatcommand("region", {
 	description = "Call \'region help <command>\' to get more information about the chatcommand.",
 	params = "<help> <guide> <status> <own> <pos1> <pos2> <max_y> <set> \n <show> <border> <export> <import> \n <import_areas> <player>",
@@ -77,18 +69,28 @@ minetest.register_chatcommand("region", {
 			err = rac:command_pos(name,pos,1)
 		elseif param == "pos2" then 			-- 'end' if param == 
 			err = rac:command_pos(name,pos,2)
-		elseif param == "max_y" then 			-- 'end' if param == 
-			err = rac:command_max_y(name)
-		elseif param:sub(1, 3) == "set" then 	-- 'end' if param == 
+		elseif param:sub(1, 5) == "max_y" then 			-- 'end' if param == 
+			local numbers = string.split(param, " ")
+			-- [1] command max_y, [2] id, [3] new_y
+			err = rac:command_max_y(name,numbers[2],numbers[3])
+		elseif param:sub(1, 3) == "set" and param:sub(1, 5) ~= "set_m"then 	-- 'end' if param == 
 			err = rac:command_set(param, name)
 		elseif param:sub(1, 4) == "show" then	-- 'end' if param == 
 			local numbers = string.split(param:sub(6, -1), " ")
 			local header = true
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - numbers[1]: "..tostring(numbers[1])	)
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(numbers[1]): "..tostring(type(numbers[1]))	)
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - tonumber(numbers[1]): "..tostring(tonumber(numbers[1]))	)
+						
 			if numbers[1] == nil then		
 				err = rac:command_show(header,name,nil,nil)
-			else
+			elseif tonumber(numbers[1]) ~= nil then
 				-- if numbers only contains strings then tonumber become 0 - no error_handling
 				err = rac:command_show(header,name,tonumber(numbers[1]),tonumber(numbers[2]))
+			else -- number[1] ist eine String, das sollte der Name eines Spielers sein...
+				-- ' region show {name}' ist somit 'region {name}
+				local header = 'command show'
+				err = rac:command_player_regions(header,param, name)
 			end
 		elseif param:sub(1, 6) == "border" then		-- 'end' if param == 
 			err = rac:command_border(param, name)
@@ -109,20 +111,37 @@ minetest.register_chatcommand("region", {
 				err = 59 --[59] = "ERROR: func: register_chatcommand(\"region\"  - Dir fehlt das Privileg 'region_admin'!",
 			end
 			rac:import(rac.export_file_name)
-		elseif param == "import_areas" then 	-- 'end' if param == 
-			-- check privileg region_admin
-			if not minetest.check_player_privs(name, { region_admin = true }) then 
-				err = 59 --[59] = "ERROR: func: register_chatcommand(\"region\"  - Dir fehlt das Privileg 'region_admin'!",	
-			end
-			rac:import(rac.areas_rac_export)	
+		elseif param:sub(1, 12) == "change_owner" then 	-- 'end' if param == 
+			err = rac:command_change_owner(param, name, false)
 		elseif param:sub(1, 6) == "player" then
 			local header = true
 			err = rac:command_player_regions(header,param, name)
-		elseif param:sub(1, 4) == "mark" then
-			err = rac:command_mark(param, name)
+			rac:msg_handling(err, name) 
+--		elseif param:sub(1, 4) == "mark" then
+--			err = rac:command_mark(param, name)
 		elseif param:sub(1, 6) == "remove" then -- 'end' if param == 
 			err = rac:command_remove(param, name)	
-
+		elseif param:sub(1, 4) == "list" then -- 'end' if param == 
+			local all = string.split(param:sub(5, -1), " ")
+			err = rac:regions_by_zone(name,all[1])	
+		elseif param:sub(1, 3) == "pvp" then	-- 'end' if param == 
+			err = rac:command_pvp(param, name)
+		elseif param:sub(1, 3) == "mvp" then	-- 'end' if param == 
+			err = rac:command_mvp(param, name)
+		elseif param:sub(1, 9) == "claimable" then	-- 'end' if param == 
+			err = rac:command_claimable(param, name)
+		elseif param:sub(1, 7) == "protect" then	-- 'end' if param == 
+			err = rac:command_protect(param, name)
+		elseif param:sub(1, 6) == "effect" then	-- 'end' if param == 
+			err = rac:command_effect(param, name)
+		elseif param:sub(1, 6) == "rename" then	-- 'end' if param == 
+			err = rac:command_rename(param, name)
+		elseif param:sub(1, 11) == "change_zone" then	-- 'end' if param == 
+			err = rac:command_change_zone(param, name)
+		elseif param:sub(1, 7) == "set_min" then	-- 'end' if param == 
+			err = rac:command_set_min(param, name, "min")
+		elseif param:sub(1, 7) == "set_max" then	-- 'end' if param == 
+			err = rac:command_set_min(param, name, "max")
 		elseif param ~= "" then 				-- if no command is found 
 			minetest.chat_send_player(name, "Invalid usage.  Type \"/help region\" for more information.")
 		else
