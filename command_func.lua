@@ -84,12 +84,8 @@ function rac:command_help(param, name)
 		chat_end = chat_start.." {command}' um mehr Infos zu dem Command zu erhalten. [privileg: interact]"
 	elseif command == "guide" then
 		chat_end = chat_start.."' zeigt den rac-guide zur Verwaltung der Regionen an. [privileg: interact]"
---	elseif command == "status" then
---		chat_end = chat_start.."' to get some more infos about the region at your position. [privileg: interact]"
-	elseif command == "border" then
-		chat_end = chat_start.."' um dein Gebiet an dieser Position sichtbar zu machen. [privileg: interact]"..
-			"\nDer region_admin kann mit '/region border' alle Regionen an dieser Stelle sichtbar machen. [privileg: region_admin]"..
-			"\nDer region_admin kann mit '/region border {id}' die Region mit der ID sichtbar machen. [privileg: region_admin]"
+	elseif command == "status" then
+		chat_end = chat_start.."' zeigt wichtige Infos zur Region an dieser Position. . [privileg: interact]"
 	elseif command == "own" then
 		chat_end = chat_start.."' zeige eine Liste deiner Regionen. [privileg: region_set]"
 	elseif command == "pos1" then
@@ -98,16 +94,57 @@ function rac:command_help(param, name)
 	elseif command == "pos2" then
 		chat_end = chat_start.."' setzte Position 2. Gehe an eine Ecke deines Gebietes und rufe  \'region pos1\', "..
 			"\n auf, gehen zur gegenüberliegenden Ecke und nutze \'region pos2\'. Anschließend mit \'region set {region_name}\' claimst du das Gebiet. [privileg: region_set]"
-	elseif command == "max_y" then
-		chat_end = chat_start.."'  Setze die Region {id} auf max Höhe, 1/3 nach unten, 2/3 nach oben. 'region max_y {id}' [privileg: region_set]"
 	elseif command == "set"	then
-		chat_end = chat_start.." {region_name}' Wurden pos1 und pos2 gesetzt, kann man jetzt mit \'region set {region_name}\' das Gebiet claimen. [privileg: region_set]"
+		chat_end = chat_start.." {region_name}' Wurden pos1 und pos2 gesetzt, kann man jetzt mit \'region set {region_name}\' das Gebiet claimen. [privileg: region_set]"..
+			"\nTipp: anschließend über den Rac-Guide die Region anpassen." 
+	elseif command == "max_y" then
+		chat_end = chat_start.."'  Setze die Region {id} auf max Höhe, 1/3 nach unten, 2/3 nach oben. 'region max_y {id}' [privileg: region_set]"..
+			"\nDer region_admin kann auch einen Wert angeben, dieser wird dann nach 1/3-2/3 aufgeteilt und verwendet."
+	elseif command == "border" then
+		chat_end = chat_start.."' um dein Gebiet an dieser Position sichtbar zu machen. [privileg: interact]"..
+			"\nDer region_admin kann mit '/region border' alle Regionen an dieser Stelle sichtbar machen. [privileg: region_admin]"..
+			"\nDer region_admin kann mit '/region border {id}' die Region mit der ID sichtbar machen. [privileg: region_admin]"
+	elseif command == "change_owner" then
+		chat_end = chat_start.."' Der Besitzer einer Region kann mit '/region change_owner {id} {neuer Besitzer}' seine Region an einen anderen übertragen."..
+			"\nDer region_admin kann alle Regionen an andere Besitzer übertragen"
+	elseif command == "show" then
+		chat_end = chat_start.."' [privileg: region_admin] mit 'region show' gibt es eine Liste mit Infos zu alle Regionen,"..
+			"\nmit 'region show {id}' gibt es Infos zu dieser ID"..
+			"\nmit 'region show {name}' gibt es Infos zu den Regionen dieses Spielers."
+	elseif command == "compass" then
+		chat_end = chat_start.."' [privileg: region_admin] Mit 'region compass {id}' zeigt das Hud mittels rechts/links an, in welcher Richtung die Region ist." 
 	elseif command == "export" then
 		chat_end = chat_start.."' Exportiere den AreaStore in ein file! [privileg: region_admin]"
 	elseif command == "import" then
 		chat_end = chat_start.."' Importiere den AreaStore von dem file! [privileg: region_admin]"
 	elseif command == "player" then
-		chat_end = chat_start.." {player_name}' zeige eine Liste aller Regionen einser Spielers! [privileg: region_admin]"
+		chat_end = chat_start.." {player_name}' zeige eine Liste aller Regionen einser Spielers! [privileg: region_admin]"..
+			"\nist identische zu 'region show [player_name}'"
+	elseif command == "remove" then
+		chat_end = chat_start.." [privileg: region_admin] - mit 'region remove {id}' wird diese Region gelöscht."..
+			"\nMit 'region remove all' werden ALLE Regionen gelöscht."
+	elseif command == "list" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region list' zeigt eine Liste aller Regionen, sortiert nach outback,city,.."..
+			"\nMit 'region list full' zeigt die Liste zusätzlich den Besitzer, die ID, den Region_Name und die 'Zustände' wie protected, claimable, pvp und mvp Status."
+	elseif command == "pvp" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region pvp {id} {true/false}' aktiviert/deaktiviert das PvP für diese Region"
+	elseif command == "mvp" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region mvp {id} {true/false}' aktiviert/deaktiviert den Monsterschaden für diese Region"
+	elseif command == "claimable" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region claimable {id} {true/false}' aktiviert/deaktiviert das claimable für diese Region"
+	elseif command == "protect" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region protect {id} {true/false}' aktiviert/deaktiviert den Schutz diese Region"
+	elseif command == "effect" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region effect {id} {effect} {add/delete}' setzt oder löscht den {effect} für diese Region"
+	elseif command == "change_zone" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region change_zone {id} {new Zone}' setzt den Zonen-Bezeichner der Region. Erlabute Zonen: outback, city, plot, owned."
+	elseif command == "rename" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region rename {id} {neuer Name}' benennt die Region um."
+	elseif command == "set_min" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region set_min {id} {x,y,z}' setzt die Min-Position der Region auf {x,y,z}."		
+	elseif command == "set_max" then
+		chat_end = chat_start.." [privileg: region_admin] - 'region set_max {id} {x,y,z}' setzt die Min-Position der Region auf {x,y,z}."			
+
 	else
 		chat_end = "The command is unknown!"
 	end
@@ -310,7 +347,7 @@ function rac:command_show(header, name,list_start,list_end)
 	if header == false or header == "status" then
 		chat_string_start = ""
 	end
-	
+	local position -- Für die Ausgabe der min/max Werte der Region
 	
 	-- no privileg check: header == status then command_show is called by command_status 
 	-- else privileg region_admin / can_modify.admin == true
@@ -354,7 +391,8 @@ function rac:command_show(header, name,list_start,list_end)
 	
 		
 		if counter <= stop_list or stop_list < 0 then
-			local err,data = rac:get_region_datatable(counter)
+			--local err,data = rac:get_region_datatable(counter)
+			local err, min,max,data = rac:get_region_data_by_id(counter,false)
 			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
 			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - err: "..tostring(err)	)
 			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - data: "..tostring(minetest.serialize(data) )	)
@@ -365,12 +403,17 @@ function rac:command_show(header, name,list_start,list_end)
 				-- was soll da rein?
 				-- id, playername, Name der Region, pvp, mpv?
 				stacked_zone = rac:get_stacked_zone_as_string(counter)
+				if can_modify.admin then
+					position = " Min ("..tostring(min)..") Max ("..tostring(max)..") "
+				else
+					position = ""
+				end
 				if header == "status" then
 					chat_string = chat_string.."ID: "..tostring(counter).." "
 				else
 					chat_string = chat_string.."\n ID: "..tostring(counter).." "
 				end
-				chat_string = chat_string..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp).." Zonen: "..stacked_zone
+				chat_string = chat_string..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp).." Zonen: "..stacked_zone..position
 			end 
 		end -- if counter <= stop_list or stop_list < 0 then
 		counter = counter + 1
@@ -654,6 +697,8 @@ function rac:command_max_y(name,region_id,new_y)
 		err = rac:update_regions_data(region_id,min,max,data_table)
 		if err == 0 then
 			minetest.chat_send_player(name, "Die Höhe der Region ( "..region_id.." ) wurde angepasst.")
+			local header = true
+			err = rac:command_show(header,name,tonumber(region_id))
 		else
 			return err
 		end
@@ -661,7 +706,7 @@ function rac:command_max_y(name,region_id,new_y)
 		-- was tun?
 		return 83 --		[83] = "info: func: rac:command_max_y - Diese Region kann nicht so hoch / tief werden!",
 	end
-	return 0
+	return err
 end
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
@@ -700,7 +745,7 @@ end
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- rac:command_set_min(param, name) 
+-- rac:command_set_min(param, name, edge) 
 -- privileg: region_admin
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
@@ -713,8 +758,11 @@ end
 --		edge				"min"/"max" entscheidet ob die min-Ecke oder die Max-Ecke verändert wird
 --
 -- return:
---		0 			alle Ok
--- 		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
+--		err 						von rac:update_regions_data(region_id,min,max,data_table)
+--			0							alles OK
+-- 		return 100 --		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
+--		return 101 -- 	[101] = "Error: func: rac:command_set_min - min/max wurde nicth übergeben",
+--		return 102 -- 	[102] = "Error: func: rac:command_set_min - keine Admin-Berechtigung",
 --
 -- msg/error handling:
 -- 	return 100 -- wenn die Parameter nicht reichen, id und/oder x,y,z fehlt
@@ -724,6 +772,12 @@ function rac:command_set_min(param, name, edge)
 	local func_name = "rac:command_set_min"
 	if rac.show_func_version and rac.debug_level > 0 then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	
+	-- check privileg
+	local can_modify = rac:player_can_modify_region_id(name)
+	if not can_modify.admin then
+		return 102 -- 		[102] = "Error: func: rac:command_set_min - keine Admin-Berechtigung",
 	end
 	
 	-- baue aus param die x,y,z Werte
@@ -742,9 +796,15 @@ function rac:command_set_min(param, name, edge)
 		return 100 --		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
 	end
 
-	local x = value1[1]
-	local y = value1[2]
-	local z = value1[3]
+	local x = tonumber(value1[1])
+	local y = tonumber(value1[2])
+	local z = tonumber(value1[3])
+	
+	-- test auf nil
+	if x == nil or y == nil or z == nil then
+		minetest.chat_send_player(name, "Zu wenige Parameter übergeben, use ’/region set_min id x,y,z")
+		return 100 --		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
+	end
 	
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(param)	)		
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
@@ -752,114 +812,38 @@ function rac:command_set_min(param, name, edge)
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - y: "..tostring(y)	)		
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - z: "..tostring(z)	)		
 	
-	--[[
-	-- es wurde kein region_id angeben.
-	-- melde error.
-	if region_id == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." keine ID -> FEHLER"	)		
-		rac:msg_handling(79,func_name,name)
-		return 79 --		[79] = "ERROR: func: rac:command_max_y - Keine ID angegeben. '/region max_y ID'",
-	else
-		region_id = tonumber(region_id)
-	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - nach tonumber: region_id: "..tostring(region_id)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(type(region_id))	)		
 	
-	-- prüfe Berechtigung
-	-- wenn owner ein error, dann ist owner eine Zahl
-	local owner =  rac:get_region_attribute(region_id, "owner")
-	if tonumber(owner) ~= nil then 
-		rac:msg_handling(tonumber(owner),func_name,name)
-		return tonumber(owner)
-	end
-
-	-- get privileg
-	local can_modify = rac:player_can_modify_region_id(name)	
-	local owner = rac:get_region_attribute(region_id, "owner")
-	-- ist name = owner -> weiter
-	-- ist can_modify.set oder can.modify.admin --> weiter
-	if not can_modify.admin then
-		if owner ~= name then
-			return 80 --	[80] = "info: func: rac:command_max_y - Du bist nicht der Besitzer",
-		end
-		return 81 -- 		[81] = "info: func: rac:command_max_y - keine Admin-Berechtigung",
-	end
-	
-	-- hole die zone, damit man den max_y Wert hat.
-	local zone =  rac:get_region_attribute(region_id, "zone")
-	if new_y == nil then
-		new_y = rac.maximum_height[zone]
-	else
-		new_y = tonumber(new_y)
-	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone: "..tostring(zone)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - new_y: "..tostring(new_y)	)		
-	
-	
-	-- hole die Ecken der Region
-	local err,pos1, pos2, data_table = rac:get_region_data_by_id(region_id)
+	-- eigentlich sollten nun die x,y,z Werte stimmen
+	-- prüfe nun die region_id
+	-- hole die Ecken und Werte der Region
+	local err,min, max, data_table = rac:get_region_data_by_id(region_id)
 	if err ~= 0 then
 		rac:msg_handling(err,func_name)
 	end
-	-- welcher Wert ist unten, setzen min und max
-	local min, max
-	if pos1.y < pos2.y then
-		min = pos1
-		max = pos2
-	else
-		max = pos1
-		min = pos2
-	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - min: "..tostring(min)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - max: "..tostring(max)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - new_y: "..tostring(new_y)	)
 
-	-- Prüfen auf max height?
-	-- nur bei owner ~= admin
-	if (max.y - min.y) > new_y then
-		if not can_modify.admin then
-			return 82 -- 		[82] = "info: func: rac:command_max_y - diese Region hat schon die maximale Höhe!",
-		end
+	
+	-- prüfe übergebenen edge, sollte min/max sein
+	if edge == "min" then
+		min = vector.new(x,y,z)
+	elseif edge == "max" then
+		max = vector.new(x,y,z)
+	else
+		return 101 -- 		[101] = "Error: func: rac:command_set_min - min/max wurde nicth übergeben",
 	end
 	
-	local y_diff =  math.abs( (new_y  - math.abs(pos1.y - pos2.y)) / 3 ) 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - y_diff: "..tostring(y_diff)	)
-	-- 1/3 to the down
-	min.y = min.y - y_diff
-	-- 2/3 into the sky
-	max.y = max.y + (2 * y_diff)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Nach der Veränderung - min: "..tostring(min)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Nach der Veränderung - max: "..tostring(max)	)
-
-	-- prüfe das neue Gebiet
-	-- wird witergereicht an rac:player_can_create_region(edge1, edge2, name, modify_region_id)
-	if rac:can_modify_region(min, max, name, region_id) then
-		-- setze die neue Größe
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - min: "..tostring(min)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - max: "..tostring(max)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - name: "..tostring(name)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)
-		
-		err = rac:update_regions_data(region_id,min,max,data_table)
-		if err == 0 then
-			minetest.chat_send_player(name, "Die Höhe der Region ( "..region_id.." ) wurde angepasst.")
-		else
-			return err
-		end
-	else
-		-- was tun?
-		return 83 --		[83] = "info: func: rac:command_max_y - Diese Region kann nicht so hoch / tief werden!",
+	err = rac:update_regions_data(region_id,min,max,data_table)
+	if err == 0 then
+		local header = true
+		err = rac:command_show(header,name,tonumber(region_id))
 	end
-	]]--
-	return 0
+	return err
 end
 
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
 -- command own
--- privileg: region_mark
+-- privileg: region_admin / region_set
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 -- called: 'region own'

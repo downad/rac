@@ -87,9 +87,9 @@ minetest.register_chatcommand("region", {
 			elseif tonumber(numbers[1]) ~= nil then
 				-- if numbers only contains strings then tonumber become 0 - no error_handling
 				err = rac:command_show(header,name,tonumber(numbers[1]),tonumber(numbers[2]))
-			else -- number[1] ist eine String, das sollte der Name eines Spielers sein...
+			else -- number[1] ist ein String, das sollte der Name eines Spielers sein...
 				-- ' region show {name}' ist somit 'region {name}
-				local header = 'command show'
+				local header = "command show"
 				err = rac:command_player_regions(header,param, name)
 			end
 		elseif param:sub(1, 6) == "border" then		-- 'end' if param == 

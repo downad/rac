@@ -19,7 +19,7 @@ Zusätzlich ist es möglich auf Gebieten das PvP oder den Monsterdamage zu regel
 Dabei werden die Gebiete nicht mehr (ausschließlich) über ChatCommands gesteuert. 
 Es wurde ein RAC-Guide-Book eingeführt, über das der Spieler/Admin kontrolle über die Gebiete hat.  
 
-Dazu kann der Players {abhängig von Privilegien}
+Dazu kann der Player {abhängig von Privilegien}
 - ein Gebiet "claimen", benennen, schützen, sowie umbenennen, einem neuen Besitzer übergeben oder löschen. 
 - Gäste einladen, damit diese mit ihm zusammen auf dem (geschützten) Gebiet handeln können.
 - das PvP auf den eingenen Gebieten erlauben oder verbieten
@@ -88,7 +88,7 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
  
 
 ### Roadmap
-- vollständiges ReDo von raz
+- vollständiges redo von raz
 - Player kann über den Rac-Guide seine Gebiete anpassen
 - Admin kann outback,City und pots erzeugen.
 - das Claiming der Gebiete via Marker
@@ -112,15 +112,16 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 + 'region help'					all: verweist auf 'help region' und zeigt die verwendeten ChatCommands. 
 + 'region help {command} - eine Kurzbeschreibung wie das Command funktioniert
 + 'region guide' 				all: ruft den rac-guide zur Verwaltung der Regionen auf. 
-+ 'region status'				all: zeigt wichtige Infos zur Rgion an dieser Position. 
++ 'region status'				all: zeigt wichtige Infos zur Region an dieser Position. 
+
 ### mit Privileg 'region_set'
 + 'region own'					all: zeigt die Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status 
 + 'region pos1'					Player mit 'region_set'/'region_admin': Setzte die erste Ecke einer möglichen neuen Region
 + 'region pos2'					Player mit 'region_set'/'region_admin': Setzte die zweite Ecke einer möglichen neuen Region
-+ 'region set {name}'		Player mit 'region_set'/'region_admin': Lege eine Region mit {name} an. DAvor mus pos1 und pos2 gesetz werden
++ 'region set {name}'		Player mit 'region_set'/'region_admin': Lege eine Region mit {name} an. Davor mus pos1 und pos2 gesetz werden.
 + 'region max_y {id}'				Player mit 'region_set'/'region_admin': Setze die Region auf max Höhe, 1/3 nach unten, 2/3 nach oben
 + 'region border' 			Player: zeigt die Grenzen der eigenen Region an dieser Pos an
-+ 'region change_owner {id} {player}'		Player mit 'region_set'/'region_admin': übertrage die Region {id} an [player}
++ 'region change_owner {id} {player}'		Player mit 'region_set'/'region_admin': übertrage die Region {id} an {player}
 
 
 ### für den admin - Privileg 'region_dmin'

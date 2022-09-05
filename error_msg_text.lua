@@ -8,7 +8,7 @@
 	--		ERROR: 	-> Ausgabe in minetest.log
 	--		Info:		-> Ausgabe in minetest.log
 	--		msg: 		-> Ausgabe erfolgt nur an den Spieler
-rac.max_error = 100
+rac.max_error = 102
 rac.error_msg_text = {
 		[1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
 		[2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
@@ -104,11 +104,13 @@ rac.error_msg_text = {
 		[92] = "info: func: rac:command_protected - Falscher Aufruf des Command 'region protected' Tippe \"/region help protected\" für mehr Informationen.",
 		[93] = "info: func: rac:command_effect - keine Admin-Berechtigung",
 		[94] = "info: func: rac:command_effect - Falscher Aufruf des Command 'region effect' Tippe \"/region help effect\" für mehr Informationen.",
-		[95] = "info: func: rac:command_change_zone - keine Admin-Berechtigung",
+		[95] = "Error: func: rac:command_change_zone - keine Admin-Berechtigung",
 		[96] = "info: func: rac:command_change_zone - Falscher Aufruf des Command 'region effect' Tippe \"/region help change_zone\" für mehr Informationen.",
 		[97] = "info: func: rac:command_rename - keine Admin-Berechtigung",
 		[98] = "info: func: rac:command_rename - Falscher Aufruf des Command 'region effect' Tippe \"/region help rename\" für mehr Informationen.",
 		[99] = "info: func: rac:command_own - keine Admin-Berechtigung",
 		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
+		[101] = "Error: func: rac:command_set_min - min/max wurde nicth übergeben",
+		[102] = "Error: func: rac:command_set_min - keine Admin-Berechtigung",
 
 	}

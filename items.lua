@@ -75,7 +75,19 @@ minetest.register_node("rac:mark", {
 --           return markers.marker_after_dig_node( pos, oldnode, oldmetadata, digger );
 --        end,
 
---	on_rightclick = function(pos, node, clicker)
+				on_rightclick = function(pos, node, clicker)
+					local name = clicker:get_player_name()
+					-- die Metawerte eines Nodes an einem Ort (ist ein String)
+  				local meta = minetest.get_meta( pos )
+					local marked_time =   meta:get_string( 'time' )
+					minetest.log("action", "[" .. rac.modname .. "] rac:mark - clicker = "..name.." Zeit = "..tostring(marked_time).." aktuelle Zeit = "..  tostring( os.time()) )
+					if (marked_time + rac.marker_delete_time) < os.time() then
+						minetest.log("action", "[" .. rac.modname .. "] rac:mark - Zeit verstichen!")
+						minetest.chat_send_player(name, "Zeit des markers ist abgelaufen. der Marker wird gelöscht.")
+						minetest.set_node(pos, {name="air"})
+					end
+					
+				end,
 --
 --           minetest.show_formspec( clicker:get_player_name(),
 --				   "markers:mark",

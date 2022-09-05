@@ -67,19 +67,19 @@ rac.area_names = {
 -- diese Texte werden im hud angezeigt
 rac.zone_text = {
 		none = "-",					-- default: none
-		outback = "Umland",		-- default: outback
-		city = "Stadt",					-- default: city
-		plot =  "Bauplatz",					-- default: plot
-		owned = "besetzt", 				-- default: owned
+		outback = "outback",		-- default: outback
+		city = "city",					-- default: city
+		plot =  "plot",					-- default: plot
+		owned = "owned", 				-- default: owned
 }	
 
 -- Standarthöhe von Regionen
 rac.zone_default_height = {
 		none = 0,					-- default: 0 ist wilderness das sollte es nicht geben
-		outback = 120,		-- default: 120, im Normalfall 50% nach oben über der Mitte der gesetzten Ecken
-		city = 100,				-- default: 100, im Normalfall 50% nach oben über der Mitte der gesetzten Ecken
-		plot =  80,				-- default: 80, im Normalfall 50% nach oben über der Mitte der gesetzten Ecken
-		owned = 60, 			-- default: 60, im Normalfall 50% nach oben über der Mitte der gesetzten Ecken
+		outback = 120,		-- default: 120, im Normalfall 2/3 nach oben über der Mitte der gesetzten Ecken
+		city = 100,				-- default: 100, im Normalfall 2/3 nach oben über der Mitte der gesetzten Ecken
+		plot =  80,				-- default: 80, im Normalfall 2/3 nach oben über der Mitte der gesetzten Ecken
+		owned = 60, 			-- default: 60, im Normalfall 2/3 nach oben über der Mitte der gesetzten Ecken
 }	
 
 -- Falls die Monster in den REgionen unterschiedlichen Schaden machen sollen
@@ -99,7 +99,7 @@ rac.serveradmin_is_regionadmin = false -- default: false
 rac.do_damage_for_violation = true			-- default: true
 
 	-- the damage a player get for 'digging' in a protected region
-rac.damage_on_protection_violation = 4 -- default: 4. Der Spieler bekommt 4 Schaden wenn er in einem Geschützten Gebiet etwas abbaut.
+rac.damage_on_protection_violation = 4 -- default: 4. Der Spieler bekommt 4 Schaden wenn er in einem geschützten Gebiet etwas abbaut.
 	
 	
 	

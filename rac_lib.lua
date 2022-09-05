@@ -686,7 +686,7 @@ function rac:get_region_datatable(id)
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0
-	--	no_deserialize == false = String
+	--	no_deserialize = true = String
 	local err, pos1,pos2,data = rac:get_region_data_by_id(id,false)
 --	minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - id: "..tostring(id)	)
 --	minetest.log("action", "[" .. rac.modname .. "] rac:get_region_datatable - pos1: "..tostring(minetest.serialize(pos1))	)
@@ -1533,27 +1533,30 @@ function rac:draw_border(region_id)
 	
 	local err,pos1, pos2, data = rac:get_region_data_by_id(region_id)
 	local box
-	minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border err = {"..tostring(err).."}" ) 
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." err = {"..tostring(err).."}" ) 
 	if err ~= 0 then
 		rac:msg_handling(err,func_name)
 	else
 		data = rac:get_region_attribute(region_id, "zone")
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border data = {"..tostring(data).."}" ) 
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." data = {"..tostring(data).."}" ) 
 		
 		local center = rac:get_center_of_box(pos1, pos2)
-		minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border center = {"..tostring(center).."}" )
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." center = {"..tostring(center).."}" )
 		-- je nach zone eine andere entity
 		if data == "outback" then
-			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - outback - data = {"..tostring(data).."}" ) 
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - outback - data = {"..tostring(data).."}" ) 
 			box = minetest.add_entity(center, "rac:showarea_outback")	
 		elseif data == "city" then
-			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - city - data = {"..tostring(data).."}" ) 
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - city - data = {"..tostring(data).."}" ) 
 			box = minetest.add_entity(center, "rac:showarea_city")	
 		elseif data == "plot" then
-			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - plot - data = {"..tostring(data).."}" ) 
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - plot - data = {"..tostring(data).."}" ) 
 			box = minetest.add_entity(center, "rac:showarea_plot")	
+		elseif data == "owned" then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - owned - data = {"..tostring(data).."}" ) 
+			box = minetest.add_entity(center, "rac:showarea_owned")	
 		else -- default
-			minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border - owned - data = {"..tostring(data).."}" ) 
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - default - data = {"..tostring(data).."}" ) 
 			box = minetest.add_entity(center, "rac:showarea_default")	
 		end
 	 
@@ -2290,8 +2293,7 @@ function rac:marker_placed( pos, placer, itemstack )
   local name = placer:get_player_name();
 
   meta:set_string( 'infotext', 'Marker at '..minetest.pos_to_string( pos )..
-				' (placed by '..tostring( name )..'). '..
-				'Right-click to update.');
+				' (placed by '..tostring( name )..'). ');
   meta:set_string( 'owner',    name );
   -- this allows protection of this particular marker to expire
   meta:set_string( 'time',     tostring( os.time()) );
