@@ -63,15 +63,16 @@ License:
 function rac:command_help(param, name)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_help"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	-- darf der user interacten?
 	if not minetest.check_player_privs(name, { interact = true }) then 
 		return 	40 -- [40] = "ERROR: func: rac:command_help - Dier fehlt das Privileg 'interact'!",
 	end
-	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." param: "..tostring(param)) 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." param: "..tostring(param)) 
+	end
 	
 	local value = string.split(param, " ") 
 	-- value[1] == 'help'
@@ -80,7 +81,9 @@ function rac:command_help(param, name)
 	local chat_start = "Call command '/region "..command  
 	local chat_end 
 	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." command: >"..tostring(command).."<"	)
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." command: >"..tostring(command).."<"	)
+	end
 	
 	if command == "help" and value[1] == "help" then
 		chat_end = chat_start.." {command}' um mehr Infos zu dem Command zu erhalten. [privileg: interact]"
@@ -178,7 +181,7 @@ function rac:command_help(param, name)
 function rac:command_status(name,pos)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_status"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
@@ -215,7 +218,9 @@ function rac:command_status(name,pos)
 			counter = counter + 1	
 		end -- end if regions_id then
 	end -- end for regions_id, v in pairs(rac.rac_store:get_areas_for_pos(pos)) do
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - counter: "..tostring(counter)	)
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - counter: "..tostring(counter)	)
+	end
 	-- es wurde kein Gebiet gefunden!
 	if counter == 1 then
 		chat_string = rac.wilderness.name.." Besitz von "..rac.wilderness.owner.." ".." pvp ("..tostring(rac.wilderness.pvp).."), mvp ("..tostring(rac.wilderness.mvp).."),"
@@ -232,7 +237,9 @@ function rac:command_status(name,pos)
 		else
 			chat_string = ""
 		end
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - "..chat_string	)
+		if rac.debug_level <= rac.debug.info then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - "..chat_string	)
+		end
 	end
 	return 0 -- no error
 end
@@ -271,7 +278,7 @@ end
 function rac:command_border(param, name)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_border"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err 
@@ -318,7 +325,9 @@ function rac:command_border(param, name)
 		else -- if region_id ~= nil then
 			-- hole alle Regionen an dieser Stelle
 			for region_id, v in pairs(rac.rac_store:get_areas_for_pos(pos)) do	
---				minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border k = "..tostring(region_id) )  
+				if rac.debug_level <= rac.debug.verbose then
+					minetest.log("action", "[" .. rac.modname .. "] chatcommand command_border k = "..tostring(region_id) )  
+				end
 				rac:draw_border(region_id)	
 			end
 		end
@@ -354,7 +363,7 @@ end
 function rac:command_show(header, name,list_start,list_end)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_show"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - header: "..tostring(header)	)	
 	end
@@ -402,21 +411,25 @@ function rac:command_show(header, name,list_start,list_end)
 	
 	local stop_list = list_end
 	local counter = list_start
+	if rac.debug_level <= rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - list_start: "..tostring(list_start)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - list_end: "..tostring(list_end)	)
-
+	end
 	-- get all regions in AreaStore()
 	while rac.rac_store:get_area(counter) do
-		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:command_show - stop_list: "..tostring(stop_list)	)
-	
+		if rac.debug_level <= rac.debug.info then
+			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - stop_list: "..tostring(stop_list)	)
+		end
 		
 		if counter <= stop_list or stop_list < 0 then
 			--local err,data = rac:get_region_datatable(counter)
 			local err, min,max,data = rac:get_region_data_by_id(counter,false)
-			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - err: "..tostring(err)	)
-			minetest.log("action", "[" .. rac.modname .. "] rac:command_show - data: "..tostring(minetest.serialize(data) )	)
+			if rac.debug_level <= rac.debug.info then
+				minetest.log("action", "[" .. rac.modname .. "] rac:command_show - counter: "..tostring(counter)	)
+				minetest.log("action", "[" .. rac.modname .. "] rac:command_show - err: "..tostring(err)	)
+				minetest.log("action", "[" .. rac.modname .. "] rac:command_show - data: "..tostring(minetest.serialize(data) )	)
+			end
 			if err > 0 then
 				rac:msg_handling(err,func_name)
 			else
@@ -541,7 +554,7 @@ end
 function rac:command_change_owner(param, name, by_function)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_change_owner"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0 -- alles ok
@@ -629,24 +642,30 @@ end
 function rac:command_max_y(name,region_id,new_y)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_max_y"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(type(region_id))	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - new_y: "..tostring(new_y)	)		
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(type(region_id))	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - new_y: "..tostring(new_y)	)		
+	end
 	
 	-- es wurde kein region_id angeben.
 	-- melde error.
 	if region_id == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." keine ID -> FEHLER"	)		
+		if rac.debug_level <= rac.debug.warning then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." keine ID -> FEHLER"	)		
+		end
 		rac:msg_handling(79,func_name,name)
 		return 79 --		[79] = "ERROR: func: rac:command_max_y - Keine ID angegeben. '/region max_y ID'",
 	else
 		region_id = tonumber(region_id)
 	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - nach tonumber: region_id: "..tostring(region_id)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(type(region_id))	)		
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - nach tonumber: region_id: "..tostring(region_id)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(type(region_id))	)		
+	end
 	
 	-- prüfe Berechtigung
 	-- wenn owner ein error, dann ist owner eine Zahl
@@ -675,10 +694,11 @@ function rac:command_max_y(name,region_id,new_y)
 	else
 		new_y = tonumber(new_y)
 	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone: "..tostring(zone)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - new_y: "..tostring(new_y)	)		
-	
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone: "..tostring(zone)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - new_y: "..tostring(new_y)	)		
+	end
 	
 	-- hole die Ecken der Region
 	local err,pos1, pos2, data_table = rac:get_region_data_by_id(region_id)
@@ -694,10 +714,12 @@ function rac:command_max_y(name,region_id,new_y)
 		max = pos1
 		min = pos2
 	end
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - min: "..tostring(min)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - max: "..tostring(max)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - new_y: "..tostring(new_y)	)
-
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - min: "..tostring(min)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - max: "..tostring(max)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - new_y: "..tostring(new_y)	)
+	end
+	
 	-- Prüfen auf max height?
 	-- nur bei owner ~= admin
 	if (max.y - min.y) > new_y then
@@ -707,23 +729,28 @@ function rac:command_max_y(name,region_id,new_y)
 	end
 	
 	local y_diff =  math.abs( (new_y  - math.abs(pos1.y - pos2.y)) / 3 ) 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - y_diff: "..tostring(y_diff)	)
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Vor der Veränderung - y_diff: "..tostring(y_diff)	)
+	end
 	-- 1/3 to the down
 	min.y = min.y - y_diff
 	-- 2/3 into the sky
 	max.y = max.y + (2 * y_diff)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Nach der Veränderung - min: "..tostring(min)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Nach der Veränderung - max: "..tostring(max)	)
-
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Nach der Veränderung - min: "..tostring(min)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." Nach der Veränderung - max: "..tostring(max)	)
+	end
 	-- prüfe das neue Gebiet
 	-- wird witergereicht an rac:player_can_create_region(edge1, edge2, name, modify_region_id)
 	if rac:can_modify_region(min, max, name, region_id) then
 		-- setze die neue Größe
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - min: "..tostring(min)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - max: "..tostring(max)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - name: "..tostring(name)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)
-		
+		if rac.debug_level <= rac.debug.verbose then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - min: "..tostring(min)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - max: "..tostring(max)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - name: "..tostring(name)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)
+		end
+			
 		err = rac:update_regions_data(region_id,min,max,data_table)
 		if err == 0 then
 			minetest.chat_send_player(name, "Die Höhe der Region ( "..region_id.." ) wurde angepasst.")
@@ -760,15 +787,16 @@ end
 function rac:can_modify_region(edge1, edge2, name, modify_region_id) 
 	local func_version = "1.0.0"
 	local func_name = "rac:can_modify_region"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local can_set_region,zone_table = rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 	
 	--	return false,zone_table
 	
-	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - can_set_region: "..tostring(can_set_region)	)
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - can_set_region: "..tostring(can_set_region)	)
+	end
 	return can_set_region
 end
 
@@ -800,7 +828,7 @@ end
 function rac:command_set_min(param, name, edge) 
 	local func_version = "1.0.0"
 	local func_name = "rac:command_set_min"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
@@ -812,7 +840,9 @@ function rac:command_set_min(param, name, edge)
 	
 	-- baue aus param die x,y,z Werte
 	local value = string.split(param:sub(8, -1), " ")
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #value: "..tostring(#value)	)		
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #value: "..tostring(#value)	)		
+	end
 	if #value ~= 2 then
 		minetest.chat_send_player(name, "Zu wenige Parameter übergeben, use ’/region set_min id x,y,z")
 		return 100 --		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
@@ -820,7 +850,9 @@ function rac:command_set_min(param, name, edge)
 	local region_id = value[1] 
 	
 	local value1 = string.split(value[2], ",") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #value1: "..tostring(#value1)	)		
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #value1: "..tostring(#value1)	)		
+	end
 	if #value1 ~= 3 then
 		minetest.chat_send_player(name, "Zu wenige Parameter übergeben, use ’/region set_min id x,y,z")
 		return 100 --		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
@@ -835,13 +867,13 @@ function rac:command_set_min(param, name, edge)
 		minetest.chat_send_player(name, "Zu wenige Parameter übergeben, use ’/region set_min id x,y,z")
 		return 100 --		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
 	end
-	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(param)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - x: "..tostring(x)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - y: "..tostring(y)	)		
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - z: "..tostring(z)	)		
-	
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(param)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_id: "..tostring(region_id)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - x: "..tostring(x)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - y: "..tostring(y)	)		
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - z: "..tostring(z)	)		
+	end		
 	
 	-- eigentlich sollten nun die x,y,z Werte stimmen
 	-- prüfe nun die region_id
@@ -887,7 +919,7 @@ end
 function rac:command_own(name)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_own"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
@@ -930,7 +962,7 @@ end
 function rac:command_set(param, name) 
 	local func_version = "1.0.0"
 	local func_name = "rac:command_set"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 
@@ -947,8 +979,10 @@ function rac:command_set(param, name)
 	
 	local can_modify = rac:player_can_modify_region_id(player)
 	if can_modify.admin or can_modify.set then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Erlaubnis zum Claimen - can_modify.admin "..tostring(can_modify.admin)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Erlaubnis zum Claimen - can_modify.set "..tostring(can_modify.set)	)
+		if rac.debug_level <= rac.debug.verbose then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Erlaubnis zum Claimen - can_modify.admin "..tostring(can_modify.admin)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Erlaubnis zum Claimen - can_modify.set "..tostring(can_modify.set)	)
+		end
 		-- passen den region_name an
 		local region_name = param:sub(5, -1)
 		
@@ -979,13 +1013,14 @@ function rac:command_set(param, name)
 		--						city = true, 						-- kann nur von admin gesetzt werden
 		--						outback = true, 				-- kann nur von admin gesetzt werden 
 		err,zone_table = rac:can_player_set_region(rac.command_players[name].pos1,rac.command_players[name].pos2, name)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err: "..tostring(err)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.player: "..tostring(zone_table.player)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.plot_id: "..tostring(zone_table.plot_id)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.plot: "..tostring(zone_table.plot)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.city: "..tostring(zone_table.city)	)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.outback: "..tostring(zone_table.outback)	)
-
+		if rac.debug_level <= rac.debug.info then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err: "..tostring(err)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.player: "..tostring(zone_table.player)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.plot_id: "..tostring(zone_table.plot_id)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.plot: "..tostring(zone_table.plot)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.city: "..tostring(zone_table.city)	)
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - admin_table.outback: "..tostring(zone_table.outback)	)
+		end
 					-- Fehlerbehandlung 
 		if type(err) ~= "boolean" then
 			return err
@@ -1036,7 +1071,9 @@ function rac:command_set(param, name)
 				--rac:region_set_attribute(name, id, region_attribute, value, bool,by_function)
 				err = rac:region_set_attribute(name, zone_table.plot_id, "owner", name, false,by_function)
 				--err,region_data_string = rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect)
-				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err = "..tostring(err)	)
+				if rac.debug_level <= rac.debug.info then
+					minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err = "..tostring(err)	)
+				end
 				if err == 0 then
 					-- Player ist owner der Region
 					-- passe zone an 				zone = owned
@@ -1099,7 +1136,7 @@ end
 function rac:command_compass(param, name)
 	local func_version = "1.0.0"
 	local func_name = "rac:command_compass"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local player = minetest.get_player_by_name(name)
@@ -1112,13 +1149,18 @@ function rac:command_compass(param, name)
 		minetest.chat_send_player(name, "Dir fehlt das Privileg region_admin!")
 		return 75 -- 		[75] = "ERROR: func: command_compass - Dir fehlt das Privileg region_admin!",
 	end
-	
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - param: "..tostring(param)	)
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - param: "..tostring(param)	)
+	end
 	local region_id = param:sub(8, -1)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - number: "..tostring(region_id)	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - number: "..tostring(region_id)	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	end
 	region_id = tonumber(region_id)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(number): "..tostring(type(region_id))	)
+	end
 	if region_id == nil then
 		minetest.chat_send_player(name, "compass hat keine ID übergeben bekommen!")
 		return 74 -- 		[74] = "ERROR: func: command_compass - keine ID übergeben!",
@@ -1158,7 +1200,7 @@ function rac:command_remove(param, name)
 	-- check privileg
 	local func_version = "1.0.0"
 	local func_name = "rac:command_remove"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
@@ -1195,7 +1237,9 @@ function rac:command_remove(param, name)
 		-- make a backup of all region, use date
 		local backup = rac.backup_file_name..(os.date("%y%m%d_%H%M%S")..".dat" )
 		err = rac:export(backup)
-		minetest.log("action", "[" .. rac.modname .. "] remove all - backupfile = "..backup)
+		if rac.debug_level <= rac.debug.warning then
+			minetest.log("action", "[" .. rac.modname .. "] remove all - backupfile = "..backup)
+		end
 		if err then
 			minetest.log("action", "[" .. rac.modname .. "] remove all - backup done!")
 			while rac.rac_store:get_area(1) do
@@ -1212,6 +1256,511 @@ function rac:command_remove(param, name)
 end
 
 
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command pvp +/-
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region pvp {id} {+/-}
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+-- 		return 85 -- 	[85] = "info: func: rac:command_pvp - keine Admin-Berechtigung",
+-- 		return 86 -- 	[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
+
+function rac:command_pvp(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_pvp"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 85 -- 		[85] = "info: func: rac:command_pvp - keine Admin-Berechtigung",
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: must be + or -
+	local value = string.split(param:sub(4, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	if value[1] == nil then		
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help pvp\" for more information.")
+		return 86 --		[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
+
+	elseif value[2] == "+" or value[2] == "true" then
+		err = rac:region_set_attribute(name, value[1], "pvp", true) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	elseif value[2] == "-" or value[2] == "false" then 
+		err = rac:region_set_attribute(name, value[1], "pvp", false) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help pvp\" for more information.")
+		return 86 --		[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command mvp +/-
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region mvp {id} {+/-}
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+-- 		return 87 -- 	[87] = "info: func: rac:command_mvp - keine Admin-Berechtigung",
+-- 		return 88 -- 	[88] = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help mvp\" für mehr Informationen.",
+
+function rac:command_mvp(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_mvp"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 87 -- 		[87] = "info: func: rac:command_mvp - keine Admin-Berechtigung",
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: must be + or -
+	local value = string.split(param:sub(4, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	
+	if value[1] == nil then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help mvp\" for more information.")
+		return 88 --		[88 = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help pvp\" für mehr Informationen.",
+
+	elseif value[2] == "+" or value[2] == "true" then
+		err = rac:region_set_attribute(name, value[1], "mvp", true) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	elseif value[2] == "-" or value[2] == "false" then 
+		err = rac:region_set_attribute(name, value[1], "mvp", false) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help mvp\" for more information.")
+		return 88 --		[88] = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help pvp\" für mehr Informationen.",
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command claimable +/-
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region claimable {id} {+/-}
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+--		[89] = "info: func: rac:command_claimable - keine Admin-Berechtigung",
+--		[90] = "info: func: rac:command_claimable - Falscher Aufruf des Command 'region claimable' Tippe \"/region help claimable\" für mehr Informationen.",
+
+function rac:command_claimable(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_claimable"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 89
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: must be + or -
+	local value = string.split(param:sub(10, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	
+	if value[1] == nil then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help claimable\" for more information.")
+		return 90
+
+	elseif value[2] == "+" or value[2] == "true" then
+		err = rac:region_set_attribute(name, value[1], "claimable", true) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	elseif value[2] == "-" or value[2] == "false" then 
+		err = rac:region_set_attribute(name, value[1], "claimable", false) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help claimable\" for more information.")
+		return 90
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command protected +/-
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region protected {id} {+/-}
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+--		[91] = "info: func: rac:command_protected - keine Admin-Berechtigung",
+--		[92] = "info: func: rac:command_protected - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
+
+function rac:command_protect(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_protected"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 91
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: must be + or -
+	local value = string.split(param:sub(8, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	
+	if value[1] == nil then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help protected\" for more information.")
+		return 92
+
+	elseif value[2] == "+" or value[2] == "true" then
+		err = rac:region_set_attribute(name, value[1], "protected", true) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	elseif value[2] == "-" or value[2] == "false" then 
+		err = rac:region_set_attribute(name, value[1], "protected", false) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help protected\" for more information.")
+		return 92
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command effect {effect}
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region effect {id} {effect}
+--	{set_attribut macht den Check des {effects}
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+--		[93] = "info: func: rac:command_effect - keine Admin-Berechtigung",
+--		[94] = "info: func: rac:command_effect - Falscher Aufruf des Command 'region effect' Tippe \"/region help effect\" für mehr Informationen.",
+
+function rac:command_effect(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_effect"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local add_effect = nil
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 93
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: muss der effect sein
+	local value = string.split(param:sub(7, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	if value[3] ~= nil then
+		if value[3] == "delete" then
+			add_effect = false
+		elseif value[3] == "add" then
+			add_effect = true	
+		else
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[3]: "..tostring(value[1])	)
+			minetest.chat_send_player(name, "Invalid usage.  Type \"/region help effect\" for more information.")
+			return 94
+		end
+	end
+	if value[1] == nil or tonumber(value[1]) == nil then
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help effect\" for more information.")
+		return 94
+
+	elseif value[2] ~= nil  then
+		err = rac:region_set_attribute(name, value[1], "effect", value[2],add_effect) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help effect\" for more information.")
+		return 94
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command change_zone {id} {zone}
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region change_zone {id} {zone}
+--	{set_attribut macht den Check der {zone}
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+--		[95] = "info: func: rac:command_change_zone - keine Admin-Berechtigung",
+--		[96] = "info: func: rac:command_change_zone - Falscher Aufruf des Command 'region change_zone' Tippe \"/region help effect\" für mehr Informationen.",
+
+
+function rac:command_change_zone(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_change_zone"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 95
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: muss der effect sein
+	local value = string.split(param:sub(12, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	
+	if value[1] == nil then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help change_zone\" for more information.")
+		return 96
+
+	elseif value[2] ~= nil  then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
+		err = rac:region_set_attribute(name, value[1], "zone", value[2]) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help change_zone\" for more information.")
+		return 96
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command rename {id} {new name}
+-- privileg: region_admin
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region change_zone {id} {new name}
+--	{set_attribut macht den Check 
+--
+-- input:
+--		param 	(string)
+--		name 	(string) 	of the player
+--
+-- msg/error handling:
+--		[97] = "info: func: rac:command_rename - keine Admin-Berechtigung",
+--		[98] = "info: func: rac:command_rename - Falscher Aufruf des Command 'region rename' Tippe \"/region help rename\" für mehr Informationen.",
+
+
+function rac:command_rename(param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_rename"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err
+	local can_modify = rac:player_can_modify_region_id(name)	
+	-- ist can.modify.admin --> weiter
+	if not can_modify.admin then
+		return 95
+	end
+	
+	-- get the args after invite
+	-- value[1]: it must be an id of an region that is owned by name
+	-- value[2]: muss der effect sein
+	local value = string.split(param:sub(7, -1), " ") 
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
+	end
+	
+	if value[1] == nil then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help rename\" for more information.")
+		return 96
+
+	elseif value[2] ~= nil  then
+		local region_name =  value[2]
+		if #value > 2 then
+			for k,v in ipairs(value) do
+				if k > 2 then
+					region_name = region_name.." "..v
+				end
+			end
+		end
+		err = rac:region_set_attribute(name, value[1], "region_name", region_name) 
+		rac:msg_handling(err, func_name) --  message and error handling
+	else
+		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help rename\" for more information.")
+		return 96
+	end
+	return err
+end
+
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- command player 
+-- privileg: region_admin *or call by command_status
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+-- called: 'region player <player_name>'
+-- Liste der Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status
+--
+-- input:
+--	header		false, own -> chat_start = ""
+--						true -> chat_start mit Überschrift
+--						command show -> header wird true, aber playername aus parm - 'show'
+--	param
+--	name			für den  Player
+-- 
+-- return:
+--	return 77 -- [77] = "ERROR: func: rac:command_player_regions - Dir fehlt das Privileg 'region_admin'!", 		
+--	return 78 -- 		[78] = "ERROR: func: rac:command_player_regions - There is no Player with this name!",
+--	
+-- msg/error handling:
+-- return 0 - no error
+function rac:command_player_regions(header,param, name)
+	local func_version = "1.0.0"
+	local func_name = "rac:command_player_regions"
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local err, data
+	local player_name
+	if header == "command show" then
+		player_name = param:sub(6, -1)
+		header = true
+	else
+		player_name = param:sub(8, -1)
+	end
+	if rac.debug_level <= rac.debug.info then
+		minetest.log("action", "[" .. rac.modname .. "] command_player_regions param: {" .. tostring(param).."}")
+		minetest.log("action", "[" .. rac.modname .. "] command_player_regions param:sub(8,-1): >" .. tostring(player_name).."<")
+	end
+	local chat_string = ""
+	local chat_string_start = "### List of "..player_name.." Regions ###"
+	if header == false or header == "own" then
+		chat_string_start = "" -- ### Liste der Regionen ###"
+	end
+
+
+	-- no privileg check: header == own then command_player_regions is called by command_own 
+	-- else privileg region_admin 
+	local can_modify = rac:player_can_modify_region_id(name)
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - can_modify.admin: "..tostring(can_modify.admin)	)
+	end
+	if header ~= "own" and not can_modify.admin then
+		return 77 -- [77] = "ERROR: func: rac:command_player_regions - Dir fehlt das Privileg 'region_admin'!", 		
+	end
+	-- check if player_name exists
+	if not minetest.player_exists(player_name) then --player then
+		return 78 -- 		[78] = "ERROR: func: rac:command_player_regions - There is no Player with this name!",
+	end	
+		
+	local counter = 1
+	local id
+-- loop durch alle Regionen
+-- wenn owner = player_name dann an den String anhängen
+	-- get all regions in AreaStore()
+	if rac.debug_level <= rac.debug.verbose then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - fange mit dem loop an."	)
+	end
+	while rac.rac_store:get_area(counter) do
+		-- hole die region data_table
+		id = counter - 1
+		err,data = rac:get_region_datatable(id)
+		if rac.debug_level <= rac.debug.warning then
+			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err: "..tostring(err).." data.owner = "..tostring(data.owner)	)
+		end
+		if err == 0 then
+			-- only look for player_name as owner
+			if data.owner == player_name then
+				--  mit ID, Region_Name, Owner, pvp und mvp Status
+				chat_string = chat_string.."\n ID  "..tostring(id).." : "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp).." Zone: "..tostring(data.zone)
+			end 
+		end -- if counter <= stop_list or stop_list < 0 then
+		counter = counter + 1
+	end --while rac.rac_store:get_area(counter) do
+	minetest.chat_send_player(name, chat_string_start..chat_string..".")
+	return 0
+end
+
+
+
+
+--[[
 -----------------------------------------
 --
 -- command protect
@@ -1353,507 +1902,7 @@ function rac:command_ban(param, name)
 	return err
 end
 
-
-
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command pvp +/-
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region pvp {id} {+/-}
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
--- 		return 85 -- 	[85] = "info: func: rac:command_pvp - keine Admin-Berechtigung",
--- 		return 86 -- 	[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
-
-function rac:command_pvp(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_pvp"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 85 -- 		[85] = "info: func: rac:command_pvp - keine Admin-Berechtigung",
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: must be + or -
-	local value = string.split(param:sub(4, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-	
-	if value[1] == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help pvp\" for more information.")
-		return 86 --		[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
-
-	elseif value[2] == "+" or value[2] == "true" then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "pvp", true) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	elseif value[2] == "-" or value[2] == "false" then 
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] - : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "pvp", false) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help pvp\" for more information.")
-		return 86 --		[86] = "info: func: rac:command_pvp - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command mvp +/-
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region mvp {id} {+/-}
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
--- 		return 87 -- 	[87] = "info: func: rac:command_mvp - keine Admin-Berechtigung",
--- 		return 88 -- 	[88] = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help mvp\" für mehr Informationen.",
-
-function rac:command_mvp(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_mvp"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 87 -- 		[87] = "info: func: rac:command_mvp - keine Admin-Berechtigung",
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: must be + or -
-	local value = string.split(param:sub(4, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-	
-	if value[1] == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help mvp\" for more information.")
-		return 88 --		[88 = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help pvp\" für mehr Informationen.",
-
-	elseif value[2] == "+" or value[2] == "true" then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "mvp", true) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	elseif value[2] == "-" or value[2] == "false" then 
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] - : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "mvp", false) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help mvp\" for more information.")
-		return 88 --		[88] = "info: func: rac:command_mvp - Falscher Aufruf des Command 'region mvp' Tippe \"/region help pvp\" für mehr Informationen.",
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command claimable +/-
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region claimable {id} {+/-}
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
---		[89] = "info: func: rac:command_claimable - keine Admin-Berechtigung",
---		[90] = "info: func: rac:command_claimable - Falscher Aufruf des Command 'region claimable' Tippe \"/region help claimable\" für mehr Informationen.",
-
-function rac:command_claimable(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_claimable"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 89
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: must be + or -
-	local value = string.split(param:sub(10, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-	
-	if value[1] == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help claimable\" for more information.")
-		return 90
-
-	elseif value[2] == "+" or value[2] == "true" then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "claimable", true) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	elseif value[2] == "-" or value[2] == "false" then 
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] - : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "claimable", false) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help claimable\" for more information.")
-		return 90
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command protected +/-
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region protected {id} {+/-}
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
---		[91] = "info: func: rac:command_protected - keine Admin-Berechtigung",
---		[92] = "info: func: rac:command_protected - Falscher Aufruf des Command 'region pvp' Tippe \"/region help pvp\" für mehr Informationen.",
-
-function rac:command_protect(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_protected"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 91
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: must be + or -
-	local value = string.split(param:sub(8, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-	
-	if value[1] == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help protected\" for more information.")
-		return 92
-
-	elseif value[2] == "+" or value[2] == "true" then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "protected", true) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	elseif value[2] == "-" or value[2] == "false" then 
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] - : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "protected", false) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help protected\" for more information.")
-		return 92
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command effect {effect}
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region effect {id} {effect}
---	{set_attribut macht den Check des {effects}
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
---		[93] = "info: func: rac:command_effect - keine Admin-Berechtigung",
---		[94] = "info: func: rac:command_effect - Falscher Aufruf des Command 'region effect' Tippe \"/region help effect\" für mehr Informationen.",
-
-function rac:command_effect(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_effect"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local add_effect = nil
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 93
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: muss der effect sein
-	local value = string.split(param:sub(7, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-	if value[3] ~= nil then
-		if value[3] == "delete" then
-			add_effect = false
-		elseif value[3] == "add" then
-			add_effect = true	
-		else
-			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[3]: "..tostring(value[1])	)
-			minetest.chat_send_player(name, "Invalid usage.  Type \"/region help effect\" for more information.")
-			return 94
-		end
-	end
-	if value[1] == nil or tonumber(value[1]) == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help effect\" for more information.")
-		return 94
-
-	elseif value[2] ~= nil  then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "effect", value[2],add_effect) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help effect\" for more information.")
-		return 94
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command change_zone {id} {zone}
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region change_zone {id} {zone}
---	{set_attribut macht den Check der {zone}
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
---		[95] = "info: func: rac:command_change_zone - keine Admin-Berechtigung",
---		[96] = "info: func: rac:command_change_zone - Falscher Aufruf des Command 'region change_zone' Tippe \"/region help effect\" für mehr Informationen.",
-
-
-function rac:command_change_zone(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_change_zone"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 95
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: muss der effect sein
-	local value = string.split(param:sub(12, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-
-	if value[1] == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help change_zone\" for more information.")
-		return 96
-
-	elseif value[2] ~= nil  then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "zone", value[2]) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help change_zone\" for more information.")
-		return 96
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command rename {id} {new name}
--- privileg: region_admin
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region change_zone {id} {new name}
---	{set_attribut macht den Check 
---
--- input:
---		param 	(string)
---		name 	(string) 	of the player
---
--- msg/error handling:
---		[97] = "info: func: rac:command_rename - keine Admin-Berechtigung",
---		[98] = "info: func: rac:command_rename - Falscher Aufruf des Command 'region rename' Tippe \"/region help rename\" für mehr Informationen.",
-
-
-function rac:command_rename(param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_rename"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err
-	local can_modify = rac:player_can_modify_region_id(name)	
-	-- ist can.modify.admin --> weiter
-	if not can_modify.admin then
-		return 95
-	end
-	
-	-- get the args after invite
-	-- value[1]: it must be an id of an region that is owned by name
-	-- value[2]: muss der effect sein
-	local value = string.split(param:sub(7, -1), " ") 
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2]: "..tostring(value[2])	)
-
-	if value[1] == nil then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[1]: "..tostring(value[1])	)
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help rename\" for more information.")
-		return 96
-
-	elseif value[2] ~= nil  then
-		local region_name =  value[2]
-		if #value > 2 then
-			for k,v in ipairs(value) do
-				if k > 2 then
-					region_name = region_name.." "..v
-				end
-			end
-		end
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - value[2] + : "..tostring(value[2])	)
-		err = rac:region_set_attribute(name, value[1], "region_name", region_name) 
-		rac:msg_handling(err, func_name) --  message and error handling
-	else
-		minetest.chat_send_player(name, "Invalid usage.  Type \"/region help rename\" for more information.")
-		return 96
-	end
-	return err
-end
-
-
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
---
--- command player 
--- privileg: region_admin *or call by command_status
---
--- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
--- called: 'region player <player_name>'
--- Liste der Region dieses Player mit ID, Region_Name, Owner, pvp und mvp Status
---
--- input:
---	header		false, own -> chat_start = ""
---						true -> chat_start mit Überschrift
---						command show -> header wird true, aber playername aus parm - 'show'
---	param
---	name			für den  Player
--- 
--- return:
---	return 77 -- [77] = "ERROR: func: rac:command_player_regions - Dir fehlt das Privileg 'region_admin'!", 		
---	return 78 -- 		[78] = "ERROR: func: rac:command_player_regions - There is no Player with this name!",
---	
--- msg/error handling:
--- return 0 - no error
-function rac:command_player_regions(header,param, name)
-	local func_version = "1.0.0"
-	local func_name = "rac:command_player_regions"
-	if rac.show_func_version and rac.debug_level > 0 then
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
-	end
-	local err, data
-	local player_name
-	if header == "command show" then
-		player_name = param:sub(6, -1)
-		header = true
-	else
-		player_name = param:sub(8, -1)
-	end
-	minetest.log("action", "[" .. rac.modname .. "] command_player_regions param: {" .. tostring(param).."}")
-	minetest.log("action", "[" .. rac.modname .. "] command_player_regions param:sub(8,-1): >" .. tostring(player_name).."<")
-	local chat_string = ""
-	local chat_string_start = "### List of "..player_name.." Regions ###"
-	if header == false or header == "own" then
-		chat_string_start = "" -- ### Liste der Regionen ###"
-	end
-
-
-	-- no privileg check: header == own then command_player_regions is called by command_own 
-	-- else privileg region_admin 
-	local can_modify = rac:player_can_modify_region_id(name)
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - can_modify.admin: "..tostring(can_modify.admin)	)
-	if header ~= "own" and not can_modify.admin then
-		return 77 -- [77] = "ERROR: func: rac:command_player_regions - Dir fehlt das Privileg 'region_admin'!", 		
-	end
-	-- check if player_name exists
-	if not minetest.player_exists(player_name) then --player then
-		return 78 -- 		[78] = "ERROR: func: rac:command_player_regions - There is no Player with this name!",
-	end	
-		
-	local counter = 1
-	local id
--- loop durch alle Regionen
--- wenn owner = player_name dann an den String anhängen
-	-- get all regions in AreaStore()
-	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - fange mit dem loop an."	)
-	while rac.rac_store:get_area(counter) do
-		-- hole die region data_table
-		id = counter - 1
-		err,data = rac:get_region_datatable(id)
-		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err: "..tostring(err).." data.owner = "..tostring(data.owner)	)
-
-		if err == 0 then
-			-- only look for player_name as owner
-			if data.owner == player_name then
-				--  mit ID, Region_Name, Owner, pvp und mvp Status
-				chat_string = chat_string.."\n ID  "..tostring(id).." : "..data.region_name.." ("..data.owner..") ".." pvp - "..tostring(data.pvp).." mvp - "..tostring(data.mvp).." Zone: "..tostring(data.zone)
-			end 
-		end -- if counter <= stop_list or stop_list < 0 then
-		counter = counter + 1
-	end --while rac.rac_store:get_area(counter) do
-	minetest.chat_send_player(name, chat_string_start..chat_string..".")
-	return 0
-end
-
-
-
-
-
+]]--
 
 
 

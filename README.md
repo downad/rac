@@ -37,12 +37,12 @@ evil | beides, dot und choke
 
 # Kurzanleitung
 Jede Zone besitzt Eigenschaften, wie z. B. einen Namen, einen Besitzer, einen Zonenbezeichner.
-Ist eine Position nicht geclaimed, ist sie 'Wildniss', und kann auch definiert werden.
+Ist eine Position nicht geclaimed, ist sie 'Wildnis', und kann auch definiert werden.
 Eigenschaften sind auch so was wie geschützt, PVP ist erlaubt oder Monster machen keinen Schaden oder einen Effekt.
 Als Admin kann man erlauben, dass auf dem Gebiet andere Gebiete durch Spieler 'geclaimed' werden dürfen.
 
 Vorgehen:
-Im Vorfeld, kann man all diese Eigenschaften für die Wildniss vergeben.
+Im Vorfeld, kann man all diese Eigenschaften für die Wildnis vergeben.
 z. B. in der Wildnis sollen die Monster 2-fachen Schaden machen, PVP soll erlaubt sein und man darf keine Gebiete claimen.
 
 Als Admin kann man Regionen abstecken und diese als 'outback', 'city' oder 'plot' definieren.
