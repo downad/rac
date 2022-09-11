@@ -45,7 +45,7 @@ rac.razguide = {
 		Tab_2="mehr",
 		Tab_3="player-Handbuch",
 		Tab_4="Admin-Handbuch",
-		Tab_5="aktuelles Gebiet",
+--		Tab_5="aktuelles Gebiet",
 		-- Tab_6 ist das X zum Schließen der Form
 		-- zusätzlich zu den Tabs oben am Buch gibt es buttons
 		Button_7 = "Schutz ausschalten",	-- protection ausschalten
@@ -77,10 +77,52 @@ rac.razguide = {
 		
 		-- Texte für die Seiten
 		Tab_Text_1="", -- wird bei do_this == 1 gebaut
-		Tab_Text_2="Effekte:\n Je nach Privileg kann man sein Gebiet mit Effekten belegen. \n -> region_effect: \n - - hot: das Gebiete heilt den Spieler \n - - dot: das Gebiet macht dem Spieler Schaden\n - - bot: breath over time, der Atembalken wird gefüllt.\n - - choke: reduce breath over time, die Atemluft wird abgezogen.\n - - holy: hier wirken zwei Effekte, hot und bot\n - - evil: auch hier sind zwei Effekte (dot, choke) aktive.\n -> region_pvp: \n - - mit dem Command: 'region pvp {on/off}' \n - - kann man das pvp in diesem Gebiet an- bzw. ausschalten.\n -> region_mvp: \n - - mit dem Command: 'region mvp {on/off}' \n - - kann man den Schaden von Mobs (Monster) in diesem Gebiet \n - - an- bzw. ausschalten.",
-		Tab_Text_3="Admin-Info:\nÜbersicht über die Commands: \n - region remove {id/all} \n - - löscht die Region {id} oder alle Regionen \n - region show \n zeigt eine Liste mit allen Gebieten \n - region show {id} - zeigt das Gebieten mit der [id} \n - region show {id1} {id2} - zeigt alle Gebiete in diesem Intervall \n - region export \n- - eine Liste aller Gebiete wird in das World-Verzeichnis gespeichert.\n - - Diese könnte angepasst werden (3 Zeilen je Gebiet und alles Eigenschaften) \n - region import\n - - damit kann die Liste wieder importiert werden. \n - - Tipp: zuvor alle Gebiete löschen (region remove all). \n - region city {on/off} \n - - in einer City kann der Admin Bauplätze ausweisen, die die Spieler bekommen können.\n ",
-		Tab_Text_4="Privilegien:\n Es gibt 6 privilegien für das mod RAZ \n - region_mark -> damit kann man ein Gebiet setzen. \n - - Eigene Gebiete schützen (protect = true) oder freigegeben (protect = false). \n - - - Du kannst dein Gebiet umbenennen oder löschen.\n - region_set -> anderen Spielen (Gäste) erlauben in deinem Gebiet zu \"arbeiten\".\n - - Du kannst dein Gebiet an andere übertragen (change_owner)\n - region_pvp -> damit kann man auf seinen Gebiet das PVP aktivieren oder deaktivieren\n - region_mvp -> damit schaltest du den Monsterdamage auf dem Gebiet an oder aus.\n - region_effect -> damit kann das Gebiet mit \"Effekte\" belgt werden \n - - z.B. hot = heal over time \n - - dot = damage over time \n - - bot = breath over time\n - - choke = reduce breath over time \n - - holy = hot & bot \n - - evil = dot & choke \n - region_admin = Der Admin kann alles \n - - zusätzlich löschen einzelner/aller Gebiete \n - - exportieren und importieren der Gebiete",
-		Tab_Text_5="Hilfe-Info:\n bei Fragen wende dich an das minetest-Forum: \n https://forum.minetest.net/viewtopic.php?p=346397 \n oder sende eine email an downad@freenet.de.",
+		Tab_Text_2="", -- wird bei do=this == 2 gebaut
+		Tab_Text_3="Spieler:\n Bist du owner einer Region oder hast du das passende Privileg, \n"..
+		" dann kannst du deine Region anpassen oder eine Region claimen \n"..
+		" - Claimen: du hast das Privileg region_set:\n"..
+		" -- mit den Commands region pos1, region pos2 und region set {name} kannst du ein Gebiet claimen, wenn dort claimable = true ist.\n"..
+		" -- einfacher geht es mit den Markierungspfosten rac:mark\n"..
+		" - Claimen ohne das Privileg:\n"..
+		" -- der admin hat Bauplätze ausgschrieben. Diese kannst du mit den Markierungspfosten rac:mark claimen.\n"..
+		" -- oder einfacher, du bekommst einen Schlüssel, den sogenannten plotkey, damit kannst du dein Gebiet am Plotstone freischalten\n"..
+		" - Anpassen deines Gebietes: \n"..
+		" -- im einfachsen Fall benutzt du diesen rac-Guide, das Buch in deinem Inventar.\n"..
+		" -- über das Command region guide kommst du auch auf den Guide.\n"..
+		"\n"..
+		" Die Markierungspfosten rac:mark können gecrafted werden\n"..
+		" Der Rac-Guide kann gecrfafted werden\n"..
+		"\n\n"..
+		" Privilegien:\n"..
+		" - region_admin - der ADmin für das Mod\n"..
+		" - region_set - Ein Spieler mit dem set-Privileg kann Gebiete claimen und kann folgendes bearbeiten\n"..
+		" --	umbenennen\n"..
+		" --	Schutz ein- oder auschalten\n"..
+		" --  Das Gebiet an einen anderen Spieler übertragen\n"..
+		" --	Das Gebiet löschen\n"..
+		" - region_guests - Gäste auf deine Region einladen, diese können dann auch auf dem geschützten Gebiet handeln\n"..
+		" - region_pvp - man kann das pvp erlauben oder verbieten\n"..
+		" - region_mvp - man kann den Schaden von Monstern erlauben oder verbieten\n",
+		Tab_Text_4="Admin-Info:\nÜbersicht über die Commands: \n"..
+		" - region remove {id/all} \n - - löscht die Region {id} oder alle Regionen \n"..
+		" - region show - zeigt eine Liste mit allen Gebieten \n"..
+		" - region show {id} - zeigt das Gebieten mit der [id} \n"..
+		" - region show {id1} {id2} - zeigt alle Gebiete in diesem Intervall \n"..
+		" - region show {name} - zeigt die Gebiete von {name} \n"..
+		" - region list {-/full}- zeigt eine Liste aller Gebiete sortiert nach outback,city,...\n"..
+		" - region protect {id} {true/false} - setzte das Region-Attribut auf true oder false.\n"..
+		" - region claimable {id} {true/false} - setzte das Region-Attribut auf true oder false.\n"..
+		" - region change_zone {id} {zone} - setzt die Zone auf {outback/city/plot/owned}.\n"..
+		" - region rename {id} {neuer Name} - setzt den Region-name auf {neuer Name}.\n"..
+		" - region pvp {id} {true/false} - setzte das Region-Attribut auf true oder false.\n"..
+		" - region mvp {id} {true/false} - setzte das Region-Attribut auf true oder false.\n"..
+		" - region effect {id} {effect} {add/delete}- setzte/löscht eine Effect auf dieser Region.\n"..
+		" - region set_min {id} {x,y,z} - setzte die Min-Ecke der Region auf x,y,z\n"..
+		" - region set_max {id} {x,y,z} - setzte die Max-Ecke der Region auf x,y,z\n"..
+		" - region max_y {id} - setzte die Region {id} auf die maximale Höhe.\n"..
+		" - region export - eine Liste aller Gebiete wird in das World-Verzeichnis gespeichert.\n - - Diese könnte angepasst werden (3 Zeilen je Gebiet und alles Eigenschaften) \n"..
+		" - region import - damit kann die Liste wieder importiert werden. \n - - Tipp: zuvor alle Gebiete löschen (region remove all). \n"
+--		Tab_Text_5="Hilfe-Info:\n bei Fragen wende dich an das minetest-Forum: \n https://forum.minetest.net/viewtopic.php?p=346397 \n oder sende eine email an downad@freenet.de.",
 	
 	}
 
@@ -110,6 +152,7 @@ rac.line = {
 			bcol5 = 5.6, 	-- Spalte Button fünf	
 			bcol6 = 7, 		-- Spalte Button sechs
 			bcol7 = 8.4, 	-- Spalte Button sieben	
+			bl0	= 2.2, 		-- Länge: Tab-Button
 			bl1	= 2.7, 		-- Länge: langer Button
 			bl2 = 1.3,		-- Länge: kurzer Button	
 			bl3 = 2.0,		-- Länge: mittlerer Button	
@@ -320,14 +363,13 @@ function rac:guide(player,do_this)
 			text_allgemein = rac.wilderness.text_wilderness.." Hier kann man nichts sehen oder verwalten."
 		end -- region_id == nil
 		
-	end -- if do_this==1 then 
+	end -- if do_this==1 or do_this == 2 then 
 	
 	-- diese Tabs verändern den Text der Form, das muss angepasst werden
 	-- text = text_allgemein 
-	--if do_this==2 then text_allgemein=rac.razguide["Tab_Text_2"] end
 	if do_this==3 then text_allgemein=rac.razguide["Tab_Text_3"] end
 	if do_this==4 then text_allgemein=rac.razguide["Tab_Text_4"] end
-	if do_this==5 then text_allgemein=rac.razguide["Tab_Text_5"] end
+--	if do_this==5 then text_allgemein=rac.razguide["Tab_Text_5"] end
 	
 
 	minetest.log("action", "[" .. rac.modname .. "] rac:guide -vor Form - text_allgemein "..tostring(text_allgemein)	)
@@ -336,11 +378,11 @@ function rac:guide(player,do_this)
 	-- darunter steht dann immer ein Text in einem "label"
 	-- abhängig vom Privileg des Player wird weiter unter die Form erweitert.	
 	local form="size[10.1,11]" ..default.gui_bg..default.gui_bg_img..
-		"button[0,0;1.7,1;tab1;" .. rac.razguide["Tab_1"] .. "]" ..
-		"button[1.8,0;1.7,1;tab2;" .. rac.razguide["Tab_2"] .. "]" ..
-		"button[3.6,0;1.7,1;tab3;" .. rac.razguide["Tab_3"] .. "]" ..
-		"button[5.4,0;1.7,1;tab4;" .. rac.razguide["Tab_4"] .. "]" ..
-		"button[7.2,0;1.7,1;tab5;" .. rac.razguide["Tab_5"] .. "]" ..
+		"button[0,0;"..rac.line.bl0..",1;tab1;" .. rac.razguide["Tab_1"] .. "]" ..
+		"button[2.3,0;"..rac.line.bl0..",1;tab2;" .. rac.razguide["Tab_2"] .. "]" ..
+		"button[4.6,0;"..rac.line.bl0..",1;tab3;" .. rac.razguide["Tab_3"] .. "]" ..
+		"button[6.9,0;"..rac.line.bl0..",1;tab4;" .. rac.razguide["Tab_4"] .. "]" ..
+--		"button[7.2,0;1.7,1;tab5;" .. rac.razguide["Tab_5"] .. "]" ..
 		"button_exit[9,0; 1,1;tab6;X]" ..
 		"label[0,1;"..text_allgemein .."]"
 		
@@ -348,9 +390,9 @@ function rac:guide(player,do_this)
 	
 	
 	-- ohne priv admin kann man nur eigenen Gebiete anpassen
-	-- das folgende gilt nur für den Tab 1 = do_this == 1!!!
+	-- das folgende gilt nur für den Tab 1: do_this == 1!!!
 	-- und region_id ~= nil
-	if region_id ~= nil then
+	if region_id ~= nil and (do_this == 1 or do_this == 2) then
 		-- Baue die oberen 3 Zeilen für 'verwalten' und 'mehr'	
 		local region_text1 = ""
 		local region_text2 = ""

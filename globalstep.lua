@@ -168,7 +168,7 @@ minetest.register_globalstep(function(dtime)
 				rac:msg_handling(err,func_name)
 				err,data_table1 = rac:get_region_datatable(region_id[1]) 
 			end
-			-- ohne Fehler, dann fülle die Werde
+			-- ohne Fehler, dann fülle die Werte
 			if err == 0 then
 				zone = data_table1.zone
 				-- hole den ersten owner

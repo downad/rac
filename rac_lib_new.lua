@@ -33,6 +33,212 @@ License:
 ]]--
 
 
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:get_combat_attributs_for_pos(pos)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--	hole pvp  und mvp für diese Position 
+--	get the data field attributes PvP and MvP of a given posision
+--
+-- input: 
+--	pos		als Vektor
+--
+-- return:
+--	pvp,mvp als boolean 
+-- 	wenn icht gesetzt dann nil  
+--
+-- msg/error handling: no 
+-- wenn return eine Zahl, dann ERROR
+function rac:get_combat_attributs_for_pos(pos)
+	local func_version = "1.0.0"
+	local func_name = "rac:get_combat_attributs_for_pos"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local pvp = nil
+	local mvp = nil
+	local data_table = {}
+	
+	-- welche Zone gilt hier?
+	local err, region_id = rac:this_zone_counts(pos)
+	
+	if err > 0 then
+		rac:msg_handling(err,func_name)
+		return err
+	end
+	-- es wurde kein Zone gefunden
+	if region_id == nil then
+		-- wilderness gilt
+		pvp = rac.wilderness.pvp
+		mvp = rac.wilderness.mvp
+	else
+		-- hole die Werte der Zone
+		err,data_table = rac:get_region_datatable(region_id)
+		if err > 0 then
+			rac:msg_handling(err,func_name)
+			return err
+		end
+		pvp = data_table.pvp	
+		mvp = data_table.mvp	
+	end
+	
+	return pvp,mvp
+end
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:this_zone_counts(pos)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--	gibt es an dieser Position eine / mehrere Zonen?
+--	wenn ja, welche zählt?
+--	wenn nein, dann wildniss
+--
+-- input: 
+--	pos		als Vektor
+--
+-- return:
+--	err, zone_id, zone_name 
+-- 	err = 0 					wenn alles OK  
+-- 		104--		[104] = "Error: func: rac:this_zone_counts - keine gesetzte Zone gefunden!",
+--	zone_id = nil			wenn es keine Zone gibt
+--
+-- msg/error handling: no 
+function rac:this_zone_counts(pos)
+	local func_version = "1.0.0"
+	local func_name = "rac:this_zone_counts"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local data_table = {}
+	local zone_name = "none"
+	local this_zone_counts -- die region_id für die Zone die gilt 
+	local stacked_zone = {
+		outback = nil,
+		city = nil,
+		plot = nil,
+		owned = nil,
+	}	
+	local set_stacked_zone = function (string, value)	
+		if string == "owned" then 
+			stacked_zone.owned = value
+		elseif string == "plot" then 
+			stacked_zone.plot = value
+		elseif string == "city" then 
+			stacked_zone.city = value
+		elseif string == "outback" then 
+			stacked_zone.outback = value
+		end
+	end
+	
+	-- hole die Zonen an dieser Position
+	local err,region_id = rac:get_region_at_pos(pos)
+		
+	-- keine Region gefunden
+	if err == nil then
+		err = 0 
+		return err, nil
+	elseif err >  0 then
+		rac:msg_handling(err,func_name)
+		return err
+	end	
+		
+	-- kein Fehler, region_id gibt es	
+	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #region_id = "..tostring(#region_id))	
+
+	-- durchlaufe alle region_id und setze stacked_zone
+	for key, id in pairs(region_id) do
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - key: "..tostring(key).." id = "..tostring(id)	)
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - type(id) = "..tostring(type(id))	)
+
+		err,data_table = rac:get_region_datatable(id)
+		set_stacked_zone(data_table.zone,id)
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - data_table.zone = "..tostring(data_table.zone)	)
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - err = "..tostring(err)	)
+	end
+	this_zone_counts = nil
+	if stacked_zone.outback ~= nil then
+		this_zone_counts = stacked_zone.outback
+		zone_name = "outback"
+	end
+	if stacked_zone.city ~= nil then
+		this_zone_counts = stacked_zone.city
+		zone_name = "city"
+	end
+	if  stacked_zone.plot ~= nil then
+		this_zone_counts = stacked_zone.plot
+		zone_name = "plot"
+	end
+	if  stacked_zone.owned ~= nil then
+		this_zone_counts = stacked_zone.owned
+		zone_name = "owned"
+	end
+	
+	-- wenn eine this_zone_counts gesetzt wurde
+	-- return 0, this_zone_counts
+	-- andernfalls
+	-- return err, nil 
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - this_zone_counts = "..tostring(this_zone_counts)	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - zone_name = "..tostring(zone_name)	)
+	if this_zone_counts ~=nil then 
+		return 0, this_zone_counts, zone_name
+	else
+		err = 104--		[104] = "Error: func: rac:this_zone_counts - keine gesetzte Zone gefunden!",
+		rac:msg_handling(err,func_name)
+		return err, this_zone_counts, zone_name
+	end
+end
+
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--
+-- rac:claim_plot(name,region_id)
+--
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
+--	die Zone/ das Gebiet mit der region_id wird an den Spieler 'name' überschreiben
+--	dabei wird nicht! can_modify.admin oder .set oder .owner überprüft.
+-- 
+-- Kommentar: es ist damit was ähnliches wir bei change_owner, nur automatiert und mit Anpassung von
+--	claimable 	= false
+--	protected 	= true
+-- 	zone				= 'owned'
+--
+-- input: 
+--	name				als String für den Name des neuen Besitzers 
+-- 	region_id		für die ID die überschreiben werden soll.	
+--
+-- return:
+--	err,  
+-- 	err = 0 					wenn alles OK  
+--
+-- msg/error handling: no 
+function rac:claim_plot(name,region_id)
+	local func_version = "1.0.0"
+	local func_name = "rac:export"
+	if rac.show_func_version and rac.debug_level > 0 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	
+	-- überschreibe die Region
+	local by_function = true
+	-- setze den owner
+	local err = rac:region_set_attribute(name, region_id, "owner", name, false,by_function)
+	if err == 0 then
+		-- Player ist owner der Region
+		-- passe zone an 				zone = owned
+		err = rac:region_set_attribute(name, region_id, "zone", "owned")
+		if err == 0 then			
+			-- passe claimable an		claimable = false
+			err = rac:region_set_attribute(name, region_id, "claimable", false)
+			err = rac:region_set_attribute(name, region_id, "protected", true)
+			local region_name  = rac:get_region_attribute(region_id, "region_name")
+			minetest.chat_send_player(name, "Region mit dem Namen >"..region_name.."< in Besitz genommen!")
+		end
+	end
+	return err
+end
+
+
 --[[
 
 
@@ -383,8 +589,8 @@ function rac:OLD_region_in_region(pos1,pos2)
 	for region_id,v in pairs(found) do
 		-- if in one region the city-attribut is set is counts for all region there!
 		minetest.log("action", "[" .. rac.modname .. "] region_in_region! region_id "..tostring(region_id) )  
---		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! city "..tostring(raz:get_region_attribute(region_id,"city")) )  
---		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! plot "..tostring(raz:get_region_attribute(region_id,"plot")) )  
+--		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! city "..tostring(rac:get_region_attribute(region_id,"city")) )  
+--		minetest.log("action", "[" .. raz.modname .. "] region_is_plot! plot "..tostring(rac:get_region_attribute(region_id,"plot")) )  
 
 		-- city hat plots und freie stellen zwischen den plots
 		-- in einer City kann der region_admin plots setzen.

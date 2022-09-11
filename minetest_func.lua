@@ -12,7 +12,7 @@ Region Areas and City
 		- Art des Gebietes - zone: allowed_zones = { "none", "city", "plot", "owned"  }
 		- Schutz - protected: nur der Besitzen (owner) kann hier interagieren
 		- Gäste -guests: jeder Besitzer kann andere Spieler einladen in seinem Gebiet zu interagieren
-		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg PvP abhängig
+		- pvp: ist auf dem Gebiet pvp erlaubt? 	Ist vom minetest.conf und dem Privileg pvp abhängig
 		- Monster machen Schaden - mvp: der Monsterschaden kann auf dem Gebiet verboten werden
 		- Effect: jedes Gebiet kann einen Effekt haben. allowed_effects = {"none", "hot", "dot", "bot", "choke", "holy", "evil"}
 	 			hot: heal over time 
@@ -270,70 +270,102 @@ end
 
 
 
---+++++++++++++++++++++++++++++++++++++++
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
 -- Register punchplayer callback.
 --
---+++++++++++++++++++++++++++++++++++++++
+-- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 -- punchplayer callback
 -- should return true to prevent the default damage mechanism
--- is hitter a player -> PvP 
--- 	return false  - (do damage) in PvP regions			
---  return true   - (no damage) if PvP is forbidden
+-- is hitter a player -> pvp 
+-- 	return false  - (do damage) in pvp regions			
+--  return true   - (no damage) if pvp is forbidden
 -- 	if no region is set: 
 -- 	return true	  - (do damage) if pvp_only_in_pvp_regions = false
 -- 	return true	  - (no damage) if pvp_only_in_pvp_regions = true
 --
--- is hitter a mob -> MvP
---	return false  - (do damage) if MvP is set true in a region
---  return false  - (do damage) if no region is set -> MvP == nil
---  return true   - (no damage) if MvP is set false (forbidden) in an region
+-- is hitter a mob -> mvp
+--	return false  - (do damage) if mvp is set true in a region
+--  return false  - (do damage) if no region is set -> mvp == nil
+--  return true   - (no damage) if mvp is set false (forbidden) in an region
 minetest.register_on_punchplayer(function(player, hitter, time_from_last_punch, tool_capabilities, dir, damage)
+	local func_version = "1.0.0"
+	local func_name = "rac:register_on_punchplayer"
+	if rac.show_func_version and rac.debug_level > 4 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
 	local pos = player:get_pos() 
 	local name = player:get_player_name()
 	local hitter_name = hitter:get_player_name()
-	local msg = 35 --  "Mob do no damage in this zone!",
-	-- get the PvP and MvP attribute of the region
-	-- PvP can be true / false - if region is set
-	-- PvP = nil if no region is set - wildernes - the rest off the world
-	local PvP, MvP = rac:get_combat_attributs_for_pos(pos)
-
+	local msg = 103 -- 		[103] = "info: func: register_on_punchplayer - Monster machen hier Schaden!",
+	-- get the pvp and mvp attribute of the region
+	-- pvp can be true / false - if region is set
+	-- pvp = nil if no region is set - wildernes - the rest off the world
+	local pvp, mvp = rac:get_combat_attributs_for_pos(pos)
+	-- wenn pvp eine Zahl > 0 dann error
+	if tonumber(pvp) ~= nil and tonumber(pvp) > 0 then
+		-- error durch den Aufruf von rac:get_combat_attributs_for_pos(pos)
+		return err
+	end
+	
 	-- if the damage-dealer is no player then 
-	--  deal damage => MvP = true or in wilderness MvP = nil
-	--	deal no damage if MvP = false
+	--  deal damage => mvp = true or in wilderness mvp = nil
+	--	deal no damage if mvp = false
 	if hitter:is_player() == false then
-		if MvP == true or MvP == nil then
+		if mvp == true or mvp == nil then
 			return false	-- MOB do Damage
 		else
-			rac:msg_handling(msg, name) --  message
+			rac:msg_handling(msg,func_name, name) --  message
 			return true		-- MOB don't do Damge
 		end
 	end
+	-- wenn man hier ist, dann ist der hitter ein Spieler!
 
-	msg = 14 -- "NO PvP in this zone!",
-	-- if pvp_only_in_pvp_regions == true
-	-- PvP only in PvP regions!
-	if rac.pvp_only_in_pvp_regions == true then
-		if PvP == true then
-			return false	-- Player do Damage
-		else
-			rac:msg_handling(msg, name) --  message
-			rac:msg_handling(msg, hitter_name) --  message
-			return true		-- No PvP no Damge
-		end
-	else
-		-- all in the world is PvP allowed
-		if PvP == true or PvP == nil then  
-			return false	-- Player do Damage
-		else
-			rac:msg_handling(msg, name) --  message
-			rac:msg_handling(msg, hitter_name) --  message
-			return true		-- No MPvP no Damge
-		end
+	msg = 105 -- 		[105] = "info: func: register_on_punchplayer - Keine PVP-Zone!",
+	if pvp == true then
+		return false	-- Player do Damage
+	elseif pvp == false then
+		rac:msg_handling(msg,func_name, name) --  message
+		rac:msg_handling(msg,func_name, hitter_name) --  message
+		return true		-- No pvp Damge
+	else -- pvp == nil
+		msg = 106 -- 		[106] = "info: func: register_on_punchplayer - Warum ist hier pvp == nil?",
+		rac:msg_handling(msg, func_name) --  message
+		return true		-- No Mpvp no Damge
 	end
 
 end)
 
+minetest.register_on_player_hpchange(function(player, hp_change, reason, modifier)
+	-- modifier = true -> return hp_change
+	local func_version = "1.0.0"
+	local func_name = "rac:register_on_player_hpchange"
+	if rac.show_func_version and rac.debug_level > 4 then
+		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
+	end
+	local pos = vector.round(player:get_pos())
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - hp_change: "..tostring(hp_change)	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - reason.type: "..tostring(reason.type)	)
+--	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - reason.from: "..tostring(reason.from)	)
+	if reason.from == "engine" then
+--		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - reason.from == engine"	)
+		if reason.type == "punch" then
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - punched: hp_change"..tostring(hp_change)	)
+			local err,id,zone_name = rac:this_zone_counts(pos)
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - punched: err "..tostring(err)	)
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - punched: id "..tostring(id)	)
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - punched: zone_name "..tostring(zone_name)	)
+			if zone_name == nil then
+				zone_name = "none"
+			end
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - rac.zone_mob_damage[zone_name] "..tostring(rac.zone_mob_damage[zone_name])	)
+			hp_change = hp_change * rac.zone_mob_damage[zone_name]
+--			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - hp_change"..tostring(hp_change)	)
+		end
+	end
+	return hp_change
+	
+end)
 
 
 --+++++++++++++++++++++++++++++++++++++++

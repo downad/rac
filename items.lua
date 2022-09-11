@@ -31,11 +31,195 @@ Source Code:
 License: 
 	GPLv3
 ]]--
---register items and enitiy
 
+
+
+--alles für den Erweb von Plot
+
+if rac.craft.plotstone then 
+	minetest.register_craft({
+		 output = "rac:plotstone",
+		 recipe = { 
+		 	{ "rac:mark" },
+		 	{ "default:stone" },
+		 	{ "rac:mark" },
+		 }
+	});
+end
+
+minetest.register_tool("rac:plotkey", {
+	description = "Wenn die PlotNr zum Plotstone passt, kannst du das Gebiet übernehmen.",
+	inventory_image = "plotkey.png",
+	on_use = function(itemstack, user, pointed_thing)
+		--pointed_thing.under ist die Position des rac:plotstone
+		local pos = pointed_thing.under
+		local name = user:get_player_name();
+		minetest.log("action", "[" .. rac.modname .. "] rac:plotkey - pointed_thing.under "..tostring(pointed_thing.under))
+		minetest.log("action", "[" .. rac.modname .. "] rac:plotkey - pos "..tostring(pos))
+
+		local meta_plotstone
+		local plot_number_from_plotstone
+		if pos ~= nil then
+			-- hole die PlotNr aus dem plotstone
+			meta_plotstone = minetest.get_meta( pos );
+			plot_number_from_plotstone = meta_plotstone:get_string("PlotNr")
+		end
+		
+		
+		-- hole die PlotNr aus dem plotkey
+		local meta_plotkey = itemstack:get_meta()
+		local plot_number_from_plotkey = meta_plotkey:get_string("PlotNr")
+		local plotstone_pos = meta_plotkey:get_string("plotstone_pos")
+		local plotkey_text	= meta_plotkey:get_string("plotkey_text")
+		
+		
+		minetest.log("action", "[" .. rac.modname .. "] rac:plotkey - plot_number_from_plotstone "..tostring(plot_number_from_plotstone))
+		minetest.log("action", "[" .. rac.modname .. "] rac:plotkey - plot_number_from_plotkey "..tostring(plot_number_from_plotkey))
+		minetest.log("action", "[" .. rac.modname .. "] rac:plotkey - plotstone_pos "..tostring(plotstone_pos))
+		minetest.log("action", "[" .. rac.modname .. "] rac:plotkey - plotkey_text "..tostring(plotkey_text))
+		
+		-- sind beide PlotNr identische, übertrage das Gebiet und lösche die Items
+		if plot_number_from_plotstone == plot_number_from_plotkey then
+			-- hole die Zone
+			local err, zone_id, zone_name  = rac:this_zone_counts(pos)
+			if err == 0 then
+				-- claime die Region
+				err = rac:claim_plot(name,zone_id)
+			end -- if err == 0 then
+			
+			if err == 0 then 	
+				-- hole das Inventar des users
+				local inv = user:get_inventory()
+				
+				-- das muss wahrscheinlich nicht geprüft werden aber... OK
+				if inv:contains_item("main", itemstack) then
+					-- lösche den key
+					local taken = inv:remove_item("main", itemstack)
+					-- lösche den rac:plotstone
+					minetest.set_node(pos, {name="air"})
+					minetest.chat_send_player(name, "Das Gebiet gehör nun dir!")
+					return nil
+				end
+			end -- if err == 0 then
+			
+		else -- if plot_number_from_plotstone == plot_number_from_plotkey then
+			-- Ausgabe an den Spieler/user:
+			-- der Plotstone befindet sich an Pos (pos)
+			minetest.chat_send_player(name, "Dieser Schlüssel mit der PlotNr "..tostring(plot_number_from_plotkey).."\n"..
+					"gehört zum Plotstone bei Position: "..tostring(plotstone_pos) )
+			return itemstack
+		end -- if plot_number_from_plotstone == plot_number_from_plotkey then
+		
+	end 
+});
+-- Damit kann man ein Gebiet claimen, 
+-- wird der rac_plotstone auf einen Plot gesetzt,
+-- erzeugt er einen key im inv des spieler
+-- mit diesem key kann man den Plot claimen
+minetest.register_node("rac:plotstone", {
+	description = "Setze den Stein auf eine plot- oder owned-Region",
+	tiles = {"rac_plot_stone.png", "rac_plot_stone.png", "rac_plot_stone_side.png",
+                "rac_plot_stone_side.png", "rac_plot_stone_side.png", "rac_plot_stone_side.png" },
+--	groups = {snappy=2,choppy=2,oddly_breakable_by_hand=1}, 
+ 	drawtype = "normal", 
+	groups = {cracky=2},
+	is_ground_content = false,
+	stack_max = 1,
+	drop = rac.drop_plotstone,
+	on_place = function(itemstack, placer, pointed_thing)
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - itemstack " ..tostring(itemstack))
+			local name = placer:get_player_name()
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - placer:get_player_name() "..tostring(name))
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - pointed_thing "..tostring(pointed_thing))
+			local pos = pointed_thing.above
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - pos "..tostring(pos))
+			local pointed_node = pointed_thing.type
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - pointed_node "..tostring(pointed_node))
+
+			-- hole die aktive Zone an dieser pos
+			local err, zone_id, zone_name  = rac:this_zone_counts(pos)
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - err "..tostring(err))
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - zone_id "..tostring(zone_id))
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - zone_name "..tostring(zone_name))
+
+			-- ist die Zone ein plot oder owned
+			if zone_name == "owned" or zone_name == "plot" then
+				-- ist der placer der owner?
+				local owner = rac:get_region_attribute(zone_id, "owner")
+				minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - owner "..tostring(owner))
+				-- ist der owner von owned oder plot der placer
+				if owner == name then
+					-- ja, dann setze den Stein
+					return minetest.item_place(itemstack, placer, pointed_thing)
+				else
+					-- nein, dann lass es bleiben
+					minetest.chat_send_player(name, "Du bist nicht der Besitzer dieses Gebietes")
+				end
+			else
+				minetest.chat_send_player(name, "Der Plotstone kann nur auf 'plot' oder 'owned' gesetzt werde.")
+			end
+			
+	end,
+	after_place_node= function(pos, placer, itemstack)		
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - itemstack " ..tostring(itemstack))
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - placer:get_player_name() "..tostring(placer:get_player_name()))
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - pos  "..tostring(pos))
+			local meta = minetest.get_meta( pos );
+  
+			-- der placer name  
+			local name = placer:get_player_name();
+			local random_plot_string = "Plot_"..tostring(math.random(10000,99999)).."_"..name
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - random_plot_string  "..random_plot_string)
+			-- prüfen auf unique?
+			-- Stand 9/2022 nein
+			
+			-- setze die Meta-Werte für den plotstone 
+			meta:set_string( 'infotext', "Placed by "..tostring( name ).."\nDie PlotNr lautet: \n"..random_plot_string);
+			meta:set_string( 'owner',    name );
+			meta:set_string( 'PlotNr',    random_plot_string );
+			-- this allows protection of this particular marker to expire
+			--local player_inv = minetest.get_inventory({type="player", name = name})
+			--local stack = player_inv.
+			local inv = placer:get_inventory()
+			--inv:add_item("main","rac:plotkey")
+			
+			local list = inv:get_list("main")
+			
+			-- erzeuge einen plotkey
+			local item = ItemStack("rac:plotkey")
+			-- wie bekomme ich das item rac_plotkey aus dem Player-Inventory?			
+			local item_name = item:get_name()
+			local item_description = item:get_meta():get_string("description")
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - item_name  "..tostring(item_name))
+			minetest.log("action", "[" .. rac.modname .. "] rac:plotstone - item_description  "..tostring(item_description))
+			
+			-- Setze die Meta-Werte für den Key.
+			item:get_meta():set_string("PlotNr", random_plot_string)
+			item:get_meta():set_string("plotkey_text", "Mit diesem Key kannst du am Plotstone "..tostring(pos).." den Plot übernehmen.")
+			item:get_meta():set_string("plotstone_pos", tostring(pos))
+			
+			
+			-- item in das Inventar packen
+			local leftover = inv:add_item("main", item)			
+			if leftover:get_count() > 0 then
+				-- 		[107] = "Error: func: minetest.register_node('rac:plotstone' - Konne das Item nicht in das Inventar legen!",
+				rac:msg_handling(err,"minetest.register_node('rac:plotstone'")
+			end
+			
+--			itemstack.add_item("default:stone")
+--			local stack = inv:get_name("rac:plotkey")
+--			stack:get_meta():set_string("Parzelle", "123")
+			
+	end,
+})
+
+
+-- Damit kann man ein Gebiet claimen, benötigt werden 2 rac_mark an den Ecken.
+-- Das rechteck dazwischen wird geclaimed.
 minetest.register_node("rac:mark", {
 	description = "Damit kannst du dein Gebiet markieren, 2 Ecken eines Rechtecks.",
-	tiles = {"rac_markers_marked.png"},
+	tiles = {"rac_mark.png"},
+	drop =  "rac:mark",
 	drawtype = "nodebox",
 	paramtype = "light",
 	paramtype2 = "facedir",
@@ -48,16 +232,10 @@ minetest.register_node("rac:mark", {
 			},
 		},
         after_place_node = function(pos, placer, itemstack)
-        	-- hole die Position
-        	-- speicher diese am Spieler
-        	-- hat er pos1 und pos2 kann man mit rechtsclick das Gebiet setzen
-        	-- die marker verschwinden dann
-          --markers.marker_placed( pos, placer, itemstack );
-          rac:marker_placed( pos, placer, itemstack )
-					
---					minetest.get_node_timer(pos):start(rac.marker_delete_time)
-					minetest.get_node_timer(pos):start(16,0)
-        end,
+        	local err = rac:marker_placed( pos, placer, itemstack )
+        	rac:msg_handling(err,"minetest.register_node rac:mark")
+					minetest.get_node_timer(pos):start(rac.marker_delete_time,0)
+       end,
 
 				on_timer = function(pos, elapsed)
 					--minetest.after(16,function()
@@ -88,13 +266,10 @@ minetest.register_node("rac:mark", {
 					end
 					
 				end,
---
---           minetest.show_formspec( clicker:get_player_name(),
---				   "markers:mark",
---				   markers.get_marker_formspec(clicker, pos, nil)
---			);
---	end,
+
 })
+--[[
+-- unnötig?
 minetest.register_node("rac:marked", {
 	description = "Das ist ein Gebiet mit einem Besitzer.",
 	tiles = {"rac_markers_mark.png"},
@@ -110,14 +285,15 @@ minetest.register_node("rac:marked", {
 			},
 		},
 })
-
-minetest.register_craft({
-   output = "rac:mark 2",
-   recipe = { { "group:stick" },
-              { "default:apple" },
-              { "group:stick" },
-             } });
-
+]]--
+if rac.craft.mark then
+	minetest.register_craft({
+		 output = "rac:mark 2",
+		 recipe = { { "group:stick" },
+		            { "group:tree" },
+		            { "group:stick" },
+		           } });
+end
 
 
 
@@ -270,7 +446,7 @@ minetest.register_entity("rac:pos1", {
 
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 --
--- entity rac:pos1
+-- entity rac:pos2
 --
 -- + -- + -- + -- + -- + -- + -- +-- + -- + -- + -- + -- + -- + -- + -- + -- + -- + -- +
 minetest.register_entity("rac:pos2", {

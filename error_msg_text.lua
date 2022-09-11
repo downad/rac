@@ -8,7 +8,11 @@
 	--		ERROR: 	-> Ausgabe in minetest.log
 	--		Info:		-> Ausgabe in minetest.log
 	--		msg: 		-> Ausgabe erfolgt nur an den Spieler
-rac.max_error = 102
+
+
+-- wenn rac.error_msg_text mit 'info:' odre 'msg:' beginnt UND
+-- wenn ein player_name übergeben wurde
+-- send_chat an Player, dabei wird die rac.error_msg_text am - geteilt und nur der Teil dahinter vesendet
 rac.error_msg_text = {
 		[1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
 		[2] = "ERROR: register_globalstep(function(dtime) - mehr als 2 Regionen!",
@@ -40,14 +44,14 @@ rac.error_msg_text = {
 		[28] = "ERROR: func: rac:region_set_attribute - Claimable needs a boolean.",
 		[29] = "ERROR: func: rac:region_set_attribute - The effect attribute did not fit!",
 		[30] = "ERROR: func: rac:region_set_attribute - Dieser Effekt ist nicht auf der Region-Effekt-Liste! ",
-		[31] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
-		[32] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (x)!",
-		[33] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (z)!",
-		[34] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (y)!",
-		[35] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu breit (x)!",
-		[36] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu breit (z)!",
-		[37] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu hoch (y)!",
-		[38] = "ERROR: func: rac:can_player_set_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
+		[31] = "ERROR: func: rac:can_player_create_region - Dir fehlt das Privileg 'region_set! ",
+		[32] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu schmal (x)!",
+		[33] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu schmal (z)!",
+		[34] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu schmal (y)!",
+		[35] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu breit (x)!",
+		[36] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu breit (z)!",
+		[37] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu hoch (y)!",
+		[38] = "ERROR: func: rac:can_player_create_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
 		[39] = "ERROR: func: rac:get_region_attribute - The region_attribute did not fit!",
 		[40] = "ERROR: func: rac:command_help - Dir fehlt das Privileg 'interact'!",
 		[41] = "ERROR: func: rac:command_pos - Dir fehlt das Privileg 'region_set! ",
@@ -81,8 +85,8 @@ rac.error_msg_text = {
 		[69] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
 		[70] = "msg: Invalid usage.  Type \"/region help {command}\" for more information.",
 		[71] = "ERROR: func: command_set - region_name zu lang!",
-		[72] = "ERROR: func: can_player_set_region - Bezeichner Zone1 ist gleich Zone2.",
-		[73] = "ERROR: func: can_player_set_region - Mehr als 2 Zonen überlappen.",
+		[72] = "ERROR: func: can_player_create_region - Bezeichner Zone1 ist gleich Zone2.",
+		[73] = "ERROR: func: can_player_create_region - Mehr als 2 Zonen überlappen.",
 		[74] = "ERROR: func: command_compass - keine ID übergeben!",
 		[75] = "ERROR: func: command_compass - Dir fehlt das Privileg region_admin!",
 		[76] = "ERROR: func: register_globalstep - keine ID gesetzt",
@@ -112,5 +116,16 @@ rac.error_msg_text = {
 		[100] = "info: func: rac:command_set_min - zu wenige Parameter übergeben",
 		[101] = "Error: func: rac:command_set_min - min/max wurde nicth übergeben",
 		[102] = "Error: func: rac:command_set_min - keine Admin-Berechtigung",
+		[103] = "info: func: register_on_punchplayer - Monster machen hier keinen Schaden!",
+		[104] = "Error: func: rac:this_zone_counts - keine gesetzte Zone gefunden!",
+		[105] = "info: func: register_on_punchplayer - Keine PVP-Zone!",
+		[106] = "info: func: register_on_punchplayer - Warum ist hier pvp == nil?",
+		[107] = "Error: func: minetest.register_node('rac:plotstone' - Konnte das Item nicht in das Inventar legen!",
+		[108] = "info: func: rac:command_pos - Dir fehlt  das Privileg region_set oder region_admin!",
+		[109] = "Error: func: minetest.register_node('rac:mark' - Konnte das Item nicht in das Inventar legen!",
 
 	}
+	
+rac.max_error = 109	
+	
+	

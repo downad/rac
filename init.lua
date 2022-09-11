@@ -103,10 +103,17 @@ rac = {
 
 
 	-- for debugging
-	debug = true, 
-	show_func_version = true,
-	debug_level = 1, -- 1 - 10 von wenig bis alles
-	-- debug_level >8 um den bei show_func_version = true was zu sehen
+	debug = {
+		error = 4,
+		warning = 3,
+		info = 2,
+		verbose = 1,
+	}, 
+	show_func_version = true, -- wird ab debug.info gezeigt
+	
+	-- 4 error, 3 warning, 2 info, 1 verbose, 
+	debug_level = 3, 
+	
 	
 	-- some minimum/maximum values for the regions
 	minimum_width = 2,			-- the smalest region for player is a square of 3 x 3
@@ -121,7 +128,7 @@ rac = {
 		outback = 150,	-- admin
 		none = 0,
 	},
-
+	drop_plotstone = "rac:plotstone",
 	-- some values for the region effects
 	timer = 0,
 	region_effect = {

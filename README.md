@@ -50,18 +50,18 @@ Dabei gilt, dass das 'outback' eine oder mehr anderer Zonen enthalten kann. Es k
 Das heißt, es kann an einer Position nur ein 'outback' geben, darauf kann eine 'city' und noch ein Bauplatz ('plot').
 
 Jetzt könnte man ein 'outback' erstellen, dort machen die Monster nur noch 1.5-fachen Schaden und das PVP ist verboten.
-Man könnte plots für die Spieler anlegen oder aber das Claimern durch die Spieler erlauben.
+Man könnte plots für die Spieler anlegen oder aber das Claimen durch die Spieler erlauben.
 
 In einer 'city' könnte man den Monsterschaden auf 1fach reduzieren oder auch ganz abschalten. PVP verbieten und das Gebiet schützen, 
 damit die Spieler die Infrastruktur nicht zerstören. 
 In einer Stadt gibt es Bauplätze, die der Admin vorgibt. Diese können vom Spieler geclaimed werden.
 
-Die Spieler - Alles kann über rac-guide eingestellt werden:
-Mit dem Privileg 'region_set' können auf den Gebieten mit claimable = true Gebiete sichern.
+## Die Spieler - Alles kann über rac-guide eingestellt werden:
+Mit dem Privileg 'region_set' können auf den Gebieten mit claimable = true Gebiete besetzt/geclaimed werden.
 Spieler können auch Besitzer eines Gebietes sein ohne das Privileg 'region_set', in dem sie das Gebiet übertragen bekommen.
 
 Jeder Spieler kann sein Gebiet 'schützen', umbenennen oder löschen. Falls mehrer Spieler zusammenspielen wollen, 
-können sie eingeladen werden und auch auf einem geschützten Gebiet bauen oder handeln.
+können sie eingeladen werden und auch auf einem geschützten Gebiet bauen oder handeln (Privileg 'region_guests').
 
 Gebiete der Spieler sind immer dem Zonen-Bezeichner 'owned' zugeordnet und werden von ihrem Spieler verwaltet.
 
@@ -70,20 +70,28 @@ Wenn der Admin das möchte, kann er Spielern auch erlauben:
 - den Schaden der Monster auf ihren Gebieten zu erlauben/verbieten (Privileg 'region_mvp')
 - eine Effekt auf das Gebiet zu legen. Siehe Effekte, (Privileg 'region_effect')
  
-Claimen:
-mit dem Item rac:mark, setzt man an den gegenüber liegenden Ecken eines Gebietes eine Markierung. 
+## Claimen:
+Mit dem Item rac:mark, setzt man an den gegenüber liegenden Ecken eines Gebietes eine Markierung. 
 Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 - mit einem Zufallsnamen
 - als Geschützt markiert
 - PVP, Monsterdamage und Effekt wird auf ein default gestellt. (init.lua / region_attribute.XXXX )
-- für Spieler: claimable wird verboten
 - für Spieler: Zone wird als 'owned' bezeichnet
+- Wendet man das auf einen Plot an, wird der komplette Plot an den Spieler übertragen.
+- -Vorraussetzung ist, dass der 'plot' claimable = true hat und, dass die Spieler im Plot handelsn können (protected = false)
+
+Mit einem Plotkey, kann man einen Plot auf sich übertragen.
+Der admin kann auf einem 'plot' einen Plotstone setzen, dabei wird ein zugehörenden Plotkey erzeugt. Jeder der den Plotkey hat und auf den (richtigen) Plotstone anwendet bekommt das Gebiet übertragen. 
+
+
  
 
 ## Versions
 - start Juni 2022 
 - v 0.8 - ein Großteil von raz ist umgeschrieben. Player kann Rac-Guide-Guid-Book nutzen.
 - v 0.9 - Rac-Guide-Guid-Book für admin, Regionen stapelbar -> outback, city, plot, owned
+- to do:
+-	
 - v 1.0 - Mobdamage je Zone, Key für Plot
  
 
@@ -96,16 +104,17 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
  
 
 ## Privilegs:
-+ - effect:				Einen Effekt für das Gebiet wählen 	
-+ - mvp:					Monsterdamage auf dem Gebiet einschalten
-+ -	pvp:					PVP  auf dem Gebiet einschalten (falls PVP in der Welt erlaubt ist)
-+ -	guests:				Mit diesem Privileg kann der der Spieler Gäste auf sein Gebiet einladen. Die Gäste können in dem Gebiet handeln, auch wenn es geschützt ist.
++ -	admin: Der Admin kann alles
 + -	set:					Ein Spieler mit dem set-Privileg kann Gebiete claimen und kann folgendes bearbeiten
 --				umbenennen
 --			 	Schutz ein- oder auschalten
---				Das Gebiet übertragen an einen anderen Spieler
+--				Das Gebiet an einen anderen Spieler übertragen
 --				Das Gebiet löschen
-+ -	admin: Der Admin kann alles
++ -	guests:				Mit diesem Privileg kann der der Spieler Gäste auf sein Gebiet einladen. Die Gäste können in dem Gebiet handeln, auch wenn es geschützt ist.
++ - mvp:					Monsterdamage auf dem Gebiet einschalten
++ -	pvp:					PVP  auf dem Gebiet einschalten (falls PVP in der Welt erlaubt ist)
++ - effect:				Einen Effekt für das Gebiet wählen 	
+
 
 ## Commands
 ### all Players
@@ -124,7 +133,7 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 + 'region change_owner {id} {player}'		Player mit 'region_set'/'region_admin': übertrage die Region {id} an {player}
 
 
-### für den admin - Privileg 'region_dmin'
+### für den admin - Privileg 'region_admin'
 + 'region max_y {val}'	admin: Setze die Region auf {val} Höhe, 1/3 nach unten, 2/3 nach oben
 + 'region show'					admin: zeigt eine Liste aller Regoinen mit ID, Region_Name, Owner, pvp und mvp Status
 + 'region show {id}'		admin: zeigt die Region mit dieser ID mit ID, Region_Name, Owner, pvp und mvp Status
@@ -139,8 +148,8 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 + 'region remove all'		admin: löscht ALLE Regionen 
 + 'region list'					admin: zeigt eine Liste aller Regionen, sortiert nach outback,city,..
 + 'region list full'		admin: zeigt zu jeder Region noch: zone, owner, name, claimable,protected, guests, pvp, mvp, effect 
-+ 'region max_y {id} {neue Höhe}'				Player mit 'region_set'/'region_admin': Setze die Region auf max Höhe, 1/3 nach unten, 2/3 nach oben. Der Standard kann überschreiben werden.
-+ 'region pvp {id} {true/false}'		admin: setzt pvp der Region [id} auf true oder false
++ 'region max_y {id} {neue Höhe}'				Player mit 'region_set'/'region_admin': Setze die Region auf max Höhe, 1/3 nach unten, 2/3 nach oben. Die Standardwerte sind in 'setting.lua'.
++ 'region pvp {id} {true/false}'		admin: setzt pvp der Region {id} auf true oder false
 + 'region mvp {id} {true/false}'		admin: setzt mvp (den Monsterschaden) der Region [id} auf true oder false
 + 'region claimable {id} {true/false}'		admin: setzt claimable der Region [id} auf true oder false
 + 'region protect {id} {true/false}'		admin: setzt protected der Region [id} auf true oder false
@@ -151,10 +160,26 @@ Hat man die nötigen Berechtigungen, wird das Gebiet automatisch geclaimed.
 + 'region set_max {id} {x,y,z}'		admin: Setzte die Max-Ecke der Region auf x,y,z
 
  
+## items
+### plotstone
++ Auf die Regionen mit dem Zonenbezeichner 'owned' oder 'plot' kann man diesen Stein setzen.
++ - es wird eine Key erzeugt (im Inventar)
++ - der User des Key kann damit an dem Plotstone das Gebiet claimen.
++ - plotstone und key werden gelöscht. 
++ - der plotstone ist craftbar, in settings.lua kann das craften ausgeschaltet werden.
+
+### mark
++ Diese Markierungsstangen ermöglichen es ein Gebiet zu claimen.
++ - Das Craft-Rezept kann ausgeschaltet werden.
++ - Ist in einer Region das claimable = true und hat der Spieler das Privileg region_set, kann er ein Gebiet für sich claimen.
 
 
-
-
+### guide
++ Das ist ein Tool um die Regionen zu verwalten.
++ - Man muss auf der Region sein
++ - als Player kann man seine Regionen, abhängig vom Privileg, verwalten.
++ - jeder Owner kann seine REgionen verwalten
++ - Der Admin kann alles verwalten.
 
 ### Licence
 GNU General Public License v3.0

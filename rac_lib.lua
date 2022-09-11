@@ -41,6 +41,9 @@ License:
 -- 			if name ~= nil 
 -- if err == "", nil or 0 -> no Error: nothing happens
 -- else minetest.log("error",
+-- wenn rac.error_msg_text mit 'info:' odre 'msg:' beginnt UND
+-- wenn ein player_name übergeben wurde
+-- send_chat an Player, dabei wird die rac.error_msg_text am - geteilt und nur der Teil dahinter vesendet
 --
 -- input: 
 --		err als Zahl 			-> die Error Texte sind in error_text.lua hinterlegt
@@ -58,18 +61,18 @@ License:
 function rac:msg_handling(err, func, name)
 	local func_version = "1.0.0"
 	local func_name = "rac:msg_handling"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err: "..tostring(err)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err.type: "..tostring(type(err))	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - rac.max_error: "..tostring(rac.max_error)	)
 	end
 	
+	-- wurde ein Func_name übergeben?
 	if func == nil then
 		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - func hat den Wert nil: "..tostring(func)	)
 		-- bau bewusst den absturz ein
-		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - func hat den Wert nil: "..func	)
-		
+		minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - func hat den Wert nil: "..func	)		
 	end
 
 	--		Schlüsselworte
@@ -80,16 +83,19 @@ function rac:msg_handling(err, func, name)
 	if err == "" or err == nil or err == 0 then
 		return 
 	end
+	
 	local error_msg, player_msg
 	
 	-- Testen ob err vom Typ number ist
+	-- dann hole aus rac.error_msg_text den Text
 	if type(err) == "number" then
-		-- minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err.type: "..tostring(type(err))	)
+		-- Prüfe die Fehlertexte
+		-- evtl. unnötig?  
 		if err > rac.max_error then
 			-- [3] = "ERROR: func: rac:msg_handling(err, name) - die Nummer err ist größer als erlaubt!!!!",
 			error_msg = rac.error_msg_text[3]
 		else
-			-- minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err <= rac.max_error: "..tostring(rac.max_error)	)
+			-- die error_msg gibt es
 			error_msg = rac.error_msg_text[err]
 			-- check ERROR
 			if error_msg:sub(1, 6) == "ERROR:" then
@@ -107,19 +113,23 @@ function rac:msg_handling(err, func, name)
 				-- minetest.log("action", "[" .. rac.modname .. "]".. error_msg:sub(6, -1))	
 				player_msg = error_msg:sub(4, -1)	
 			end
-		-- if name exists send chat
+		
+			-- if name exists send chat
 			if name ~= nil then
-			 	minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - type of name: ".. tostring(type(name)) )
-			 	minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - name: ".. tostring(name) )
-			 	minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - player_msg: ".. tostring(player_msg) )
-			 	minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - err: ".. tostring(err) )
-			 	minetest.log("action", "[" .. rac.modname .. "] rac:msg_handling - func: ".. tostring(func) )
-				minetest.chat_send_player(name, player_msg)
+				-- zerlege den player_msg bei "-"
+				player_msg = player_msg:split("-")
+				-- wenn es einen 2. Teil gibt, sende den an denn Spieler
+				if player_msg[2] ~= nil then
+					minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - player_msg[1] =  "..tostring(player_msg[1])	)
+					minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - player_msg[2] =  "..tostring(player_msg[2])	)
+					minetest.chat_send_player(name, player_msg[2])
+				end				
 			end
 		end
+	-- wurde ein String übergeben
 	elseif type(err) == "string" then
 		if err:sub(1, 5) == "info:" then 
-			minetest.log("action", "[" .. rac.modname .. "] ".. err)	
+			minetest.log("action", "[" .. rac.modname .. "] Error_String: ".. err)	
 		else
 		-- err ist vom Typ String!
 		-- es wurde aber keine Info vorgestellt
@@ -128,11 +138,9 @@ function rac:msg_handling(err, func, name)
 			minetest.log("error", "[" .. rac.modname .. "] rac:msg_handling - Error: ".. rac.error_msg_text[1])
 		end
  	else
-		-- err ist nicht vom Typ number!
-		-- es wurde keine Nummer übertragen
+		-- err ist nicht vom Typ number oder string!
 		-- Das ist ein Fehler!
 		-- [1] = "ERROR: func: rac:msg_handling(err, name) - err ist keine Nummer",
-			-- teste ob func angegeben wurde
 		if func == nil then
 			minetest.log("error", "[" .. rac.modname .. "] rac:msg_handling - Error: ".. rac.error_msg_text[1])
 		else 	
@@ -168,7 +176,7 @@ end
 function rac:load_regions_from_file(check)
 	local func_version = "1.0.0"
 	local func_name = "rac:load_regions_from_file"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
@@ -233,7 +241,7 @@ end
 function rac:check_region_integrity()
 	local func_version = "1.0.0"
 	local func_name = "rac:check_region_integrity"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
@@ -321,7 +329,7 @@ end
 function rac:update_regions_data(id,pos1,pos2,data_table)
 	local func_version = "1.0.0"
 	local func_name = "rac:update_regions_data"	
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:update_regions_data(id,pos1,pos2,data) ID: "..tostring(id).." data: "..minetest.serialize(data_table)) 
 	end
@@ -391,7 +399,7 @@ end
 function rac:save_regions_to_file()
 	local func_version = "1.0.0"
 	local func_name = "rac:save_regions_to_file"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
@@ -421,7 +429,7 @@ end
 function rac:delete_region(id)
 	local func_version = "1.0.0"
 	local func_name = "rac:delete_region"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
@@ -499,7 +507,7 @@ end
 function rac:export(export_file_name)
 	local func_version = "1.0.0"
 	local func_name = "rac:export"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local file_name = rac.worlddir .."/".. export_file_name --rac.export_file_name
@@ -565,7 +573,7 @@ end
 -- return 55 -- "ERROR: File does not exist!  func: func: rac:import(import_file_name) - File: "..minetest.get_worldpath() .."/rac_store.dat (if not changed)",
 function rac:import(import_file_name, only_part)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:import - Version: "..tostring(func_version)	)
 	end
 	local counter = 1
@@ -629,13 +637,13 @@ end
 -- return:
 --	nil, nil			wenn es keine Region an pos gibt
 -- 	0,table 		wenn es Regionen an pos gibt	(mit allen Gebietes Id)
---	61,talbe		[61] = "ERROR: func: get_region_at_pos  - mehr als 3 Regionen an diesr Position gefunden",
+--	61,table		[61] = "ERROR: func: get_region_at_pos  - mehr als 3 Regionen an diesr Position gefunden",
 --
 -- msg/error handling: no
 function rac:get_region_at_pos(pos)
 	local func_version = "1.0.1" -- angepasstes return, nil,nil wenn keine Region gefunden wurde.
 	local func_name = "rac:get_region_at_pos"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0 -- Kein Fehler
@@ -682,7 +690,7 @@ end
 function rac:get_region_datatable(id)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_region_datatable"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -728,7 +736,7 @@ end
 function rac:get_region_data_by_id(id,no_deserialize)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_region_data_by_id"
-	if rac.show_func_version and rac.debug_level > 4 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - id: "..tostring(id)	)
 	end
@@ -770,7 +778,7 @@ end
 function rac:string_in_table(given_string, given_table)
 	local func_version = "1.0.0"
 	local func_name = "rac:string_in_table"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
   for i,v in ipairs(given_table) do
@@ -800,7 +808,7 @@ end
 function rac:table_to_string(given_table)
 	local func_version = "1.0.0"
 	local func_name = "rac:table_to_string"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local return_string = ""
@@ -832,7 +840,7 @@ end
 function rac:convert_string_to_table(string, seperator)
 	local func_version = "1.0.0"
 	local func_name = "rac:convert_string_to_table"
-	if rac.show_func_version and rac.debug_level > 4 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 
@@ -867,7 +875,7 @@ end
 function rac:remove_value_from_table(value, given_table)
 	local func_version = "1.0.0"
 	local func_name = "rac:remove_value_from_table"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local return_table = {}
@@ -932,7 +940,7 @@ end
 function rac:player_can_modify_region_id(player_obj_or_string)
 	local func_version = "1.0.0"
 	local func_name = "rac:player_can_modify_region_id"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local player
@@ -1023,7 +1031,7 @@ end -- rac:can_modify = rac:player_can_modify_region_id(player)
 --		region_attribute	as string
 --		value				as boolean or string, depending on region_attribute
 --		bool				as boolean, only used for invite or ban guest
---		by_function as boolean, wenn true, dann wird der user nicth gechecked	
+--		by_function as boolean, wenn true, dann wird der user nicht gechecked	
 -- the default bool is 'nil' - this bool is used to add or remove guests 
 -- this function checks id, region_attribut and value = bool or value = string (effects - hot, bot, holy, dot, choke, evil)
 --
@@ -1041,10 +1049,10 @@ end -- rac:can_modify = rac:player_can_modify_region_id(player)
 function rac:region_set_attribute(name, id, region_attribute, value, bool,by_function)
 	local func_version = "1.0.0"
 	local func_name = "rac:region_set_attribute"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
-	if rac.debug and rac.debug_level > 0 then
+	if rac.debug_level <= rac.debug.error then
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Übergabe ++++++++++++++++++++++++++++++++++++++++++++++++++++ "	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - Player name: "..tostring(name)	)
 		minetest.log("action", "[" .. rac.modname .. "] rac:region_set_attribute - id: "..tostring(id)	)
@@ -1278,7 +1286,7 @@ end
 function rac:get_region_attribute(id, region_attribute)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_region_attribute"
-	if rac.show_func_version and rac.debug_level > 4 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err,data = rac:get_region_datatable(id)
@@ -1337,7 +1345,7 @@ end
 function rac:file_exists(file)
 	local func_version = "1.0.0"
 	local func_name = "rac:file_exists"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
   local f = io.open(file, "rb")
@@ -1362,7 +1370,7 @@ end
 function rac:lines_from(file)
 	local func_version = "1.0.0"
 	local func_name = "rac:lines_from"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	if not rac:file_exists(file) then return {} end
@@ -1393,7 +1401,7 @@ end
 function rac:get_region_center_by_name_and_pos(name, pos)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_region_center_by_name_and_pos"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
@@ -1432,7 +1440,7 @@ end
 function rac:get_center_of_box(pos1, pos2)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_center_of_box"
-	if rac.show_func_version and rac.debug_level > 4 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 --	minetest.log("action", "[" .. rac.modname .. "] get_center_of_box pos1 = "..minetest.serialize(pos1) )  
@@ -1486,7 +1494,7 @@ end
 function rac:get_regions_in_region(edge1,edge2)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_regions_in_region"
-	if rac.show_func_version and rac.debug_level > 4 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	--local counter = 0
@@ -1527,7 +1535,7 @@ end
 function rac:draw_border(region_id)
 	local func_version = "1.0.0"
 	local func_name = "rac:draw_border"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	
@@ -1588,7 +1596,7 @@ end
 function rac:region_areasquare(edge1,edge2)
 	local func_version = "1.0.0"
 	local func_name = "rac:region_areasquare"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local squareblock, a,b
@@ -1638,7 +1646,7 @@ end
 function rac:get_stacked_zone_of_region(region_id,with_id)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_zone_stack_of_region"
-	if rac.show_func_version and rac.debug_level > 4 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local stacked_zone = {
@@ -1734,7 +1742,7 @@ end
 function rac:get_stacked_zone_as_string(region_id)
 	local func_version = "1.0.0"
 	local func_name = "rac:get_zone_stack_of_region"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local string_stacked_zone = ""
@@ -1775,7 +1783,7 @@ end
 -- msg/error handling: no
 rac.markPos1 = function(name)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "]  rac.markPos1 = func() - Version: "..tostring(func_version)	)
 	end
 	local pos = rac.command_players[name].pos1
@@ -1804,7 +1812,7 @@ end
 -- msg/error handling: no
 rac.markPos2 = function(name)
 		local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac.markPos2 = func() - Version: "..tostring(func_version)	)
 	end
 	local pos = rac.command_players[name].pos2
@@ -1838,7 +1846,7 @@ end
 -- msg/error handling: no
 function rac:player_is_guest(name,guests_string)
 	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:player_is_guest - Version: "..tostring(func_version)	)
 	end
 	
@@ -1882,7 +1890,7 @@ end
 -- 	err,data_string
 function rac:create_data_string(owner,region_name,claimable,zone,protected,guests_string,pvp,mvp,effect,do_not_check_player)
 	local func_version = "1.0.0"
-	if rac.show_func_version  and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:create_data_string - Version: "..tostring(func_version)	)
 	end
 	-- local err -> is hardcoded!
@@ -2020,7 +2028,7 @@ end
 -- 	err,id
 function rac:check_region_attribute_version()
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:check_region_attribute_version - Version: "..tostring(func_version)	)
 	end
 	local counter = 0 -- die 1. REgion hat immer die ID 0
@@ -2186,7 +2194,7 @@ end
 -- 	err,id
 function rac:set_region(pos1,pos2,data)
 	local func_version = "1.0.0"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:set_region - Version: "..tostring(func_version)	)
 	end
 	local err = 0
@@ -2229,7 +2237,7 @@ end
 --	err, data 
 function rac:get_owner_by_region_id(id)
 	local func_version = "1.0.0"
-	if rac.show_func_version then -- and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] rac:get_owner_by_region_id - Version: "..tostring(func_version)	)
 	end
 	if rac.debug then -- and rac.debug_level > 0 then
@@ -2270,13 +2278,14 @@ function rac:get_owner_by_region_id(id)
 --
 -- return:
 --	nothing
+--	err der diversen Funktionen
 --
 -- msg/error handling: yes
 --	prüfe die Privilegien
 function rac:marker_placed( pos, placer, itemstack )
 	local func_version = "1.0.0"
 	local func_name = "rac:marker_placed"
-	if rac.show_func_version and rac.debug_level > 8 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
@@ -2309,17 +2318,23 @@ function rac:marker_placed( pos, placer, itemstack )
 	if not rac.command_players[name] then
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - Setze Ecke 1: "	)
 		err = rac:command_pos(name,pos,1,false)
-		rac:msg_handling(err,func_name)
-		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] name = "..tostring(name)	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] pos1 = "..tostring(rac.command_players[name].pos1)	)
+		
+		if err == 0 and rac.debug_level  <=  rac.debug.info then
+			minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] name = "..tostring(name)	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] pos1 = "..tostring(rac.command_players[name].pos1)	)
+		else 
+			rac:msg_handling(err,func_name)
+			return err
+		end
 		
 	else
 		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - Setze Ecke 2: "	)
 		err = rac:command_pos(name,pos,2,false)
 		rac:msg_handling(err,func_name)
-		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] name = "..tostring(name)	)
-		minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] pos2 = "..tostring(rac.command_players[name].pos2)	)
-
+		if err == 0 and rac.debug_level  <=  rac.debug.info then
+			minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] name = "..tostring(name)	)
+			minetest.log("action", "[" .. rac.modname .. "] rac:marker_placed - rac.command_players[name] pos2 = "..tostring(rac.command_players[name].pos2)	)
+		end
 		-- checke Logik, passt der Raum usw.
 		-- rufe set_region auf, evtl. FORM?
 		-- lösche rac.command[name] ist nicht nötig, das macht rac:command_set
@@ -2348,7 +2363,7 @@ function rac:marker_placed( pos, placer, itemstack )
 		-- mit den ggf um rac.marker_modify_height veränderten Höhe wird das Gebiet angelegt
 		-- region_name muss um 4 verlängert werden, da command_set links was abschneidet.
 		err = rac:command_set("set "..region_name, name) 
-		rac:msg_handling(err,func_name)	
+--		rac:msg_handling(err,func_name)	
 		rac.command_players[name] = nil	
 
 			
@@ -2379,7 +2394,7 @@ end
 function rac:can_player_set_region(edge1, edge2, name)
 	local func_version = "1.0.0"
 	local func_name = "rac:can_player_set_region"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local modify_region_id = false
@@ -2402,7 +2417,7 @@ end
 -- wird modify_region_id angegeben, wird diese region_id aus der Liste gelöscht, 
 --		es wird die neue Region mit	edge1, edge2 betrachtet. 
 -- 		can_modify.set / player wird nicht berücksichtigt
---		es wird mit con_modify.admin == true getestet.
+--		es wird mit can_modify.admin == true getestet.
 --
 -- input: 
 --		edge1, edge2				as vector (table)
@@ -2423,7 +2438,7 @@ end
 --
 --
 -- msg/error handling: YES
--- return 31 -- "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
+-- return 31 -- "ERROR: func: rac:can_player_create_region - Dir fehlt das Privileg 'region_set! ",
 -- return 32 -- "msg: Your region is too small (x)!",
 -- return 33 -- "msg: Your region is too small (z)!",
 -- return 34 -- "msg: Your region is too small (y)!",
@@ -2435,7 +2450,7 @@ end
 function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 	local func_version = "1.0.0"
 	local func_name = "rac:can_player_create_region"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local err
@@ -2448,7 +2463,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 	end 
 	local can_modify = rac:player_can_modify_region_id(player)	
 	if can_modify.admin == false and can_modify.set == false then 
-		return 31 --[31] = "ERROR: func: rac:can_player_set_region - Dir fehlt das Privileg 'region_set! ",
+		return 31 --[31] = "ERROR: func: rac:can_player_create_region - Dir fehlt das Privileg 'region_set! ",
 	end
 
 	-- nur der Spieler hat max/min Werte
@@ -2456,23 +2471,23 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 	--[[
 		-- check minimum
 		if math.abs(edge1.x - edge2.x) < rac.minimum_width then 
-			return 32 -- [32] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (x)!",
+			return 32 -- [32] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu schmal (x)!",
 		end
 		if math.abs(edge1.z - edge2.z) < rac.minimum_width then 
-			return 33 --[33] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (z)!",
+			return 33 --[33] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu schmal (z)!",
 		end
 		if math.abs(edge1.y - edge2.y) < rac.minimum_height then 
-			return 34 -- [34] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu schmal (y)!",
+			return 34 -- [34] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu schmal (y)!",
 		end
 		-- check maximum
 		if math.abs(edge1.x - edge2.x) >= rac.maximum_width then 
-			return 35 -- [35] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu weit (x)!",
+			return 35 -- [35] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu weit (x)!",
 		end
 		if math.abs(edge1.z - edge2.z) >= rac.maximum_width then 
-			return 36 -- [36] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu weit (z)!",
+			return 36 -- [36] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu weit (z)!",
 		end
 		if math.abs(edge1.y - edge2.y) >= rac.maximum_height then 
-			return 37 -- [37] = "ERROR: func: rac:can_player_set_region - Das Gebiet ist zu hoch (y)!",
+			return 37 -- [37] = "ERROR: func: rac:can_player_create_region - Das Gebiet ist zu hoch (y)!",
 		end	
 ]]--
 	end --if can_modify.set then
@@ -2513,9 +2528,9 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 	local region_id,region = rac:get_regions_in_region(edge1,edge2)
 		-- region_id 		Table der Region IDs
 		-- region				Table der Region Datas 
-	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - region_id und region geholt" ) 	 
-	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_id  "..tostring(#region_id) ) 	 
-	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - type(region_data)  "..tostring(type(region)) ) 	
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - region_id und region geholt" ) 	 
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - #region_id  "..tostring(#region_id) ) 	 
+	minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - type(region_data)  "..tostring(type(region)) ) 	
 	minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data: "..tostring(minetest.serialize(region))	)	
 --	region_data = minetest.serialize(region_data)
 	if #region_id ~= 0 then
@@ -2554,7 +2569,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 		-- Player mit can_modify.set = true
 		if can_modify.admin then
 			-- setzte die Region mit zone = outback
-			minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - keine Region, Player - #region_id == 0 " )  
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - keine Region, Player - #region_id == 0 " )  
 			zone_table = {
 				player=false, 					-- true = Player
 				plot_id = nil,				
@@ -2565,7 +2580,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 				can_set_region = true -- player darf setzen		
 		else
 			-- setzte die Region mit zone = owned
-			minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - keine Region, Player - #region_id == 0 " )  
+			minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - keine Region, Player - #region_id == 0 " )  
 			zone_table = {
 				player=true, 					-- true = Player
 				plot_id = nil,				
@@ -2576,8 +2591,8 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 			can_set_region = true -- player darf setzen
 		end
 	elseif #region_id == 1 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - keine Region, Player - #region_id == 1 " )  
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_id  "..tostring(#region_id) ) 
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - keine Region, Player - #region_id == 1 " )  
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - #region_id  "..tostring(#region_id) ) 
 		-- wandel String in Table um	(DESERIALISE)
 		region[1].data = minetest.deserialize(region[1].data) 
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Betroffene region_id[1]: "..tostring(region_id[1])	)	
@@ -2657,7 +2672,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 				}
 		local check_region_id, check_region
 		can_set_region = true -- player darf setzen
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_id > 1 #region_id = "..tostring(#region_id) ) 	 
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - #region_id > 1 #region_id = "..tostring(#region_id) ) 	 
 		for key, id in pairs(region_id) do
 			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - \n\nloop region_id key = "..tostring(key).." id = "..tostring(id)	)	
 			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - region_data[key].max: "..tostring(region[key].max)	)	
@@ -2753,7 +2768,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 				--	ja, dann fehler, 2 überlappende zonen dürfen nicht gleich sein
 				-- nein, dann table_zone ohne diese zonen-Bezeichner
 				if check_region[1].data.zone == check_region[2].data.zone then
-					-- 	[72] = "ERROR: func: can_player_set_region - Bezeichner Zone1 ist gleich Zone2.",
+					-- 	[72] = "ERROR: func: can_player_create_region - Bezeichner Zone1 ist gleich Zone2.",
 					rac:msg_handling(72,func_name)
 					can_set_region = false
 				else
@@ -2766,7 +2781,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - loop #check_region_id"	)	
 				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - loop #check_region_id > 2 ")	
 				minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - loop #check_region_id = "..tostring(key).." id = "..tostring(id)	)	
-				-- 		[73] = "ERROR: func: can_player_set_region - Mehr als 2 Zonen überlappen.",
+				-- 		[73] = "ERROR: func: can_player_create_region - Mehr als 2 Zonen überlappen.",
 				rac:msg_handling(73,func_name)
 				can_set_region = false
 			end
@@ -2791,11 +2806,11 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 	elseif #region_id == 3 then
 		-- 
 	elseif #region_id > 3 then
-		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_set_region - #region_has_regions > 3  "	)		
-		return 38 -- [38] = "ERROR: func: rac:can_player_set_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
+		minetest.log("action", "[" .. rac.modname .. "] rac:can_player_create_region - #region_has_regions > 3  "	)		
+		return 38 -- [38] = "ERROR: func: rac:can_player_create_region - Andere Gebiete sind davon betroffen, du kannst das so nicht claimen!",
 	end
 	
-	if rac.debug and rac.debug_level > 0 then
+	if rac.debug_level <= rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." #### RETRUN #####: "	)
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - #region_id war: "..tostring(#region_id) ) 	 
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - can_set_region: "..tostring(can_set_region)	)	
@@ -2832,7 +2847,7 @@ end
 function rac:regions_by_zone(name,all)
 	local func_version = "1.0.0"
 	local func_name = "rac:regions_by_zone"
-	if rac.show_func_version and rac.debug_level > 0 then
+	if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 		minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 	end
 	local can_modify = rac:player_can_modify_region_id(name)	

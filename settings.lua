@@ -101,5 +101,9 @@ rac.do_damage_for_violation = true			-- default: true
 	-- the damage a player get for 'digging' in a protected region
 rac.damage_on_protection_violation = 4 -- default: 4. Der Spieler bekommt 4 Schaden wenn er in einem geschützten Gebiet etwas abbaut.
 	
+rac.craft = {
+	plotstone = true, 	-- Soll der Plotstone gecrafted werden können True/false	
+	mark = true,				-- Soll man die rac:mark zum claimen von Region bauen können? 
+	}
 	
 	
