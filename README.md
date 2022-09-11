@@ -90,9 +90,7 @@ Der admin kann auf einem 'plot' einen Plotstone setzen, dabei wird ein zugehöre
 - start Juni 2022 
 - v 0.8 - ein Großteil von raz ist umgeschrieben. Player kann Rac-Guide-Guid-Book nutzen.
 - v 0.9 - Rac-Guide-Guid-Book für admin, Regionen stapelbar -> outback, city, plot, owned
-- to do:
--	
-- v 1.0 - Mobdamage je Zone, Key für Plot
+- v 1.0 - Mobdamage je Zone, Key für Plot (Beta Testing)
  
 
 ### Roadmap
