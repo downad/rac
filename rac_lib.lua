@@ -2662,7 +2662,7 @@ function rac:can_player_create_region(edge1, edge2, name, modify_region_id)
 		--			return PlotID zur übernahme
 		local zone = region[1].data.zone 
 				-- wandel String in Table um	(DESERIALISE)
-		region[1].data = minetest.deserialize(region[1].data) 
+		-- region[1].data = minetest.deserialize(region[1].data) 
 		if rac.debug_level <= rac.debug.verbose then
 			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Betroffen Region ist diese zone: "..tostring(zone)	)
 		end	

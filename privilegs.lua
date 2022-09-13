@@ -48,7 +48,7 @@ minetest.register_chatcommand("region", {
 	func = function(name, param)
 		local func_version = "1.0.0"
 		local func_name = "register_chatcommand"
-		if rac.show_func_version and rac.debug_level > 0 then
+		if rac.show_func_version and rac.debug_level  <=  rac.debug.info then
 			minetest.log("action", "[" .. rac.modname .. "] "..func_name.." - Version: "..tostring(func_version)	)
 		end
 		local player = minetest.get_player_by_name(name)
